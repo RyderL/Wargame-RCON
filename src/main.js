@@ -19,7 +19,7 @@ const createWindow = () => {
   win.loadFile(path.join(__dirname, 'index.html'));
 
   // Open the DevTools.
-  win.webContents.openDevTools();
+  //win.webContents.openDevTools();
 };
 
 app.whenReady().then(createWindow)
@@ -89,7 +89,6 @@ var ResponseHandler = function(res) {
   var clientId = res.id;
   var data = res.data;
   
-  // 登录数据包, 只有成功登录后才会有数据返回, 否则只有异常
   if(global[global.index] && !global[global.index].auth) {
     global[global.index].auth = true;
     win.webContents.send('logged-' + clientId, true);
