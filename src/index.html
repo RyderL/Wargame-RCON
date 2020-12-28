@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wargame Web Rcon</title>
+  <link href='./assets/css/style.css?_=201227' rel='stylesheet' type='text/css'>
+  <script src="./vue.js"></script>
+</head>
+
+<body>
+
+  <div id="app" class="global">
+    <div class="server-name">{{current.ServerName}}</div>
+    <table class="t_global">
+      <tbody>
+        <tr>
+          <td class="entete" colspan="2">
+            <img class="connection" src="./assets/icon/connected.png" v-if="connected">
+            <img class="connection" src="./assets/icon/disconnected.png" v-if="!connected">
+            <span style="float:left;color: gray" id="ping"></span>
+            SERVER CONNECTION
+            <span>
+              <img class="save" src="./assets/icon/plus.png" v-on:click="plus" v-if="!create">
+              <img class="cancel" src="./assets/icon/plus.png" v-on:click="cancel" v-if="create">
+              <img class="save" src="./assets/icon/save.png" v-on:click="saveNewPreset" v-if="create">
+              <input type="text" v-model="profile" class="profile" v-if="create">
+              <img class="save" src="./assets/icon/delete.png" v-if="currentProfile && presetSize>1" v-on:click="deletePreset">
+              <select title="Preset" id="preset" v-model="currentProfile">
+                <option class="preset" v-for="(item, key) in presets" :value="item.profile">{{item.profile}}</option>
+              </select>
+            </span>
+          </td>
+
+          <td class="place_image" rowspan="11">
+            <img title="Partie protégée par mot de passe" class="locked" src="./assets/icon/locked.png" v-if="current.Private==1">
+            <img title="Contrainte nation" class="contr_nat" id="nation" :src="'./assets/img/'+current.ThematicConstraint+'_contr_thm.png'">
+            <img title="Thèmatique" class="contr_thm" id="theme" :src="'./assets/img/'+current.NationConstraint+'_contr_thm.png'">
+            <img title="Contrainte époque" class="contr_ere" id="epoque" :src="'./assets/img/'+current.DateConstraint+'_contr_ere.png'">
+            <br>
+            <img class="map_image" :src="'./assets/maps/'+current.Map+'.jpg'" v-show="!previewMap">
+            <img class="map_image" :src="'./assets/maps/'+previewMap+'.jpg'" v-show="previewMap" style="display: none;">
+            <br>
+            <span style="font-size: 0.75em; color:white;" id="map_name">{{current.MapName}}</span>
+          </td>
+
+          <td class="entete">
+            PLAYERS LIST
+            <span id="player_count"> ({{players}}) </span>
+            <span>
+              <input style="height:14px;" type="image" src="./assets/icon/refresh.png" v-on:click="reloadPlayers">
+              <input title="Autorefresh players list" style="float: right" type="checkbox" v-model="current.AutoRefresh">
+            </span>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="label G">
+            IP
+          </td>
+          <td>
+            <input class="nombre" type="text" v-model="current.IP">
+          </td>
+          <td rowspan="10">
+            <p>
+              <span id="listejoueur">
+                <div id="item_joueur" class="item_joueur" v-if="!players">Server is empty !</div>
+                <div class="liste_joueurs" v-if="players">
+                  <div class="item_joueur" v-for="(item, key) in playerList" :title="'ID : ' + item.id" v-on:click="choicePlayer(item.id)">
+                    <span class="num" style="display: inline-block;width:15px;">{{key + 1}}</span>
+                    <input title="Ban" style="height:14px" type="image" src="./assets/icon/ban.png" v-on:click="ban(item.id)">
+                    <input title="Kick" style="height:14px" type="image" src="./assets/icon/kick.png" v-on:click="kick(item.id)">
+                    <span>{{item.name}}</span>
+                    <span style="margin-right:2px;float:right">
+                      <input id="btn_blue" style="height:14px" type="image" src="./assets/icon/0_team.png" v-on:click="move(item.id,0)">
+                      <input id="btn_red" style="height:14px" type="image" src="./assets/icon/1_team.png" v-on:click="move(item.id,1)">
+                    </span>
+                    <div style="clear:both"></div>
+                  </div>
+                </div>
+              </span>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td class="label G">Port</td>
+          <td>
+            <input class="nombre" type="text" v-model="current.Port">
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="label G">Password </td>
+          <td>
+            <input class="nombre" type="text" v-model="current.RconPassword">
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="label G"></td>
+          <td>
+            <input type="button" value="Connect" v-if="!connected" v-on:click="connect">
+            <input type="button" value="Push game settings" v-if="connected" v-on:click="push">
+            <input type="button" value="Import presets" v-on:click="showDialog">
+            <input type="button" value="Export presets to clipboard" v-on:click="copy">
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="entete" style="width:50%" colspan="2">GAME SETTINGS </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="label G">Lobby name</td>
+          <td>
+            <input class="text" type="text" v-model="current.ServerName">
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="label G">Lobby password</td>
+          <td>
+            <input class="text" type="text" v-model="current.Password">
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="label G">
+            Battlefield
+            <img title="Random map" style="cursor:pointer;float:right;width:23px" src="./assets/img/random.png" v-on:click="randomMap">
+          </td>
+          <td>
+            <select id="map" v-model="current.Map">
+              <option class="map_name" v-for="(item, key, index) in maps" v-bind:value="key">{{item.name}}</option>
+            </select>
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="label G"> Game mode</td>
+          <td>
+            <select v-model="current.VictoryCond">
+              <option value="1">Destruction</option>
+              <option value="3">Economy</option>
+              <option value="4">Conquest</option>
+            </select>
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="label G"> Opposition</td>
+          <td>
+            <select v-model="current.GameType">
+              <option value="0">Showdown</option>
+              <option value="1">BLUFOR</option>
+              <option value="2">REDFOR</option>
+            </select>
+          </td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="label G">Accessibility<span style="float:right" id="acces"></span>
+          </td>
+          <td>
+            <select style="font-family: 'FontAwesome';" v-model="current.Private">
+              <option value="0">Public </option>
+              <option value="1">
+                Private </option>
+            </select>
+          </td>
+          <td>
+          </td>
+        </tr>
+        <tr>
+          <td class="entete" style="width:50%" colspan="2">GAME CONFIGURATION</td>
+          <td class="entete" style="width:50%" colspan="2">ADVENCED SETTINGS</td>
+        </tr>
+        <tr>
+          <td class="label G"> Teams</td>
+          <td>
+            <select v-model="current.MaxTeamSize">
+              <option value="1">1 vs 1</option>
+              <option value="2">2 vs 2</option>
+              <option value="3">3 vs 3</option>
+              <option value="4">4 vs 4</option>
+              <option value="5">5 vs 5</option>
+              <option value="6">6 vs 6</option>
+              <option value="7">7 vs 7</option>
+              <option value="8">8 vs 8</option>
+              <option value="9">9 vs 9</option>
+              <option value="10">10 vs 10</option>
+            </select>
+          </td>
+          <td colspan="2" class="label">
+            <span style="width:140px;display:inline-block">Manual command</span>
+            <input class="text" type="text" style="margin:0 10px 0 10px;width:500px" v-model="cmd">
+            <input type="button" value="Send" style="width:50px;" v-on:click="manualCommand">
+          </td>
+        </tr>
+        <tr>
+          <td class="label G"> 
+            Start points
+            <span style="float: right">
+              <input type="button" value="<" v-on:click="adjust('InitMoney', 1)">
+              <input type="button" value=">" v-on:click="adjust('InitMoney')">
+            </span>
+          </td>
+          <td>
+            <input class="nombre" type="text" v-model="current.InitMoney">
+          </td>
+          <td class="label" colspan="2">
+            <div v-if="currentPlayer">
+              <span style="width:140px;display:inline-block">Set player deck</span>
+              <input type="text" class="text" style="margin:0 10px 0 10px;width:500px" v-model="deck">
+              <input type="button" value="Set" style="width:50px;" v-on:click="setDeck">
+            </div>
+          </td>
+          <td>
+          </td>
+        </tr>
+        <tr>
+          <td class="label G"> 
+            Victory points
+            <span style="float: right">
+              <input type="button" value="<" v-on:click="adjust('ScoreLimit', 1)">
+              <input type="button" value=">" v-on:click="adjust('ScoreLimit')">
+            </span>
+          </td>
+          <td>
+            <input class="nombre" type="text" v-model="current.ScoreLimit">
+          </td>
+          <td style="padding-left:30px;width:30%">
+            <input type="button" value="Start the game" v-on:click="launch">
+            <input type="button" value="Stop countdown" v-on:click="cancelLaunch">
+          </td>
+        </tr>
+        <tr>
+          <td class="label G"> 
+            Time limit
+            <span style="float: right">
+              <input type="button" value="<" v-on:click="adjust('TimeLimit', 1)">
+              <input type="button" value=">" v-on:click="adjust('TimeLimit')">
+            </span>
+          </td>
+          <td><input class="nombre" type="text" v-model="current.TimeLimit">
+          </td>
+          <td class="label">  Required players</td>
+          <td><input class="nombre" type="text" v-model="current.NbMinPlayer"></td>
+        </tr>
+        <tr>
+          <td class="label G"> Income <span style="float:right">{{IncomeRate}}</span></td>
+          <td>
+            <select v-model="current.IncomeRate">
+              <option value="0">No</option>
+              <option value="1">Very low</option>
+              <option value="2">Low</option>
+              <option value="3">Medium</option>
+              <option value="4">High</option>
+              <option value="5">Very High</option>
+            </select>
+          </td>
+          <td class="label">  Countdown</td>
+          <td><input class="nombre" type="text" v-model="current.WarmupCountdown"></td>
+        </tr>
+        <tr>
+          <td class="entete" style="width:50%" colspan="2">
+            CONTRAINTS</td>
+            <td class="label">  Deployment time</td>
+            <td><input class="nombre" type="text" v-model="current.DeploiementTimeMax"></td>
+        </tr>
+        <tr>
+          <td class="label G"> 
+            Thematic</td>
+          <td><select v-model="current.ThematicConstraint">
+              <option value="-1">
+                No</option>
+              <option value="-2">
+                Any </option>
+              <option value="0">
+                Motorised </option>
+              <option value="1">
+                Armored </option>
+              <option value="2">
+                Support</option>
+              <option value="3">
+                Marine </option>
+              <option value="4">
+                Mecanized </option>
+              <option value="5">
+                Airborne </option>
+              <option value="6">
+                Naval </option>
+            </select></td>
+            <td class="label">  Max time loading</td>
+            <td><input class="nombre" type="text" v-model="current.LoadingTimeMax"></td>
+        </tr>
+        <tr>
+          <td class="label G"> 
+            Nations / Coalitions</td>
+          <td>
+            <select v-model="current.NationConstraint">
+              <option value="-1">No</option>
+              <option value="0">Nations and coalitions</option>
+              <option value="1">Nations only</option>
+              <option value="2">Coalitions only</option>
+            </select>
+          </td>
+          <td class="label"> Debrief time</td>
+          <td>
+            <input id="tps_debrief" class="nombre" type="text" v-model="current.DebriefingTimeMax">
+          </td>
+        </tr>
+        <tr>
+          <td class="label G B"> 
+            Era</td>
+          <td>
+            <select v-model="current.DateConstraint">
+              <option value="-1">
+                No </option>
+              <option value="0">
+                Post-85 </option>
+              <option value="1">
+                Post-80 </option>
+            </select>
+          </td>
+          <td class="label B"> 
+            Max players per team</td>
+          <td><input id="mts" class="nombre" type="text" v-model="current.MaxTeamSize">
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="import" v-show="show" style="display: none">
+      <div class="import-mask"></div>
+      <div class="import-container">
+        <div class="import-text"><textarea v-model="text"></textarea></div>
+        <div class="import-button">
+          <input type="button" value="Import" v-on:click="importPresets">
+          <input type="button" value="Cancel" v-on:click="cancelImport">
+        </div>
+      </div>
+    </div>
+  </div>
+  <p style="font-size:0.5em;color:#fff">WRD Web Rcon v1.0</p>
+  <script>
+    new Vue({
+      el: "#app",
+      data: {
+        serverName: "New Wargame Server",
+        maps: {
+          // 1vs1
+          "2x3_Esashi":{name: "Tropical Thunder", mode: 1},
+          "2x3_Gangjin":{name: "Mud fight", mode: 1},    
+          "2x3_Hwaseong":{name: "Nuclear Winter is coming", mode: 1},
+          "2x2_port_Wonsan_Terrestre":{name: "Wonsan Harbour", mode: 1},
+          "3x3_Muju":{name: "Plunjing Valley", mode: 1},
+          "2x3_Montagne_1":{name: "Death corridor", mode: 1},
+          "5x3_Marine_1_small_Terrestre":{name: "Strait to the Point", mode: 1},
+          "2x3_Tohoku_Alt":{name: "Paddy Field (1vs1)", mode: 1},
+          "3x3_Muju_Alt":{name: "Punchbowl", mode: 1},
+          "3x3_Marine_3_Reduite_Terrestre":{name: "Corner Hell", mode: 1},
+          "2x2_port_Wonsan":{name: "Wonsan Harbour (nav)", mode: 1},
+          "4x4_Marine_6":{name: "Out of the blue (nav)", mode: 1},
+          "4x4_Marine_7":{name: "Standoff in Barents (nav)", mode: 1},
+              
+          // 2vs2
+          "2x3_Boseong":{name: "Apocalipse Imminent", mode: 2},
+          "2x3_Tohoku":{name: "Paddy Field (2vs2)", mode: 2},
+          "2x3_Anbyon":{name: "Hop & Glory", mode: 2},
+          "3x2_Montagne_3":{name: "Chosin Reservoir", mode: 2},
+          "3x2_Taebuko":{name: "Jungle Law", mode: 2},
+          "3x2_Haenam_Alt":{name: "Chromite Operation", mode: 2},
+          "3x3_Highway_Small":{name: "Highway to Seoul (1vs1)", mode: 2},
+          "3x2_Boryeong_Terrestre":{name: "Gunboat Diplomacy", mode: 2},
+          "3x3_Marine_3_Terrestre":{name: "Another D-Day in Paradise ", mode: 2},
+          "5x3_Marine_1_small":{name: "Strait to the Point (naval)", mode: 2},
+          "4x4_Marine_10":{name: "Alea Jacta Ouest (nav)", mode: 2},
+          "4x4_Marine_9":{name: "Bulldogs and vampires (nav)", mode: 2},
+              
+          // 3vs3    
+          "3x2_Sangju":{name: "Tough Jungle", mode: 3},
+          "Chongju_Alt":{name: "Exquisite Corpses", mode: 3},
+          "3x2_Taean":{name: "Bloody Ridge", mode: 3},
+          "2x3_Montagne_2":{name: "Cliff Hanger", mode: 3}, 
+          "3x2_Haenam":{name: "Back to Inchon", mode: 3},
+          "5x3_Marine_1_Terrestre":{name: "Strait to the Point", mode: 3},
+          "3x3_Pyeongtaek_Alt":{name: "38th Perpendicular", mode: 3},
+          "3x3_Highway":{name: "Highway to Seoul (3vs3)", mode: 3},
+          "3x3_Thuringer_Wald":{name: "Snake Pit", mode: 3},
+          "3x3_Thuringer_Wald_Alt":{name: "Cross Road", mode: 3},
+          "3x2_Boryeong":{name: "Gunboat Diplomacy (nav)", mode: 3},
+          "3x3_Marine_3":{name: "Another D-Day in Paradise (nav)", mode: 3},
+          "4x4_Marine_4":{name: "Atoll is Coming", mode: 3},
+          "4x4_Marine_5":{name: "Waterworld", mode: 3},
+              
+          //4vs4
+          "4x3_Sangju_Alt":{name: "Green Line", mode: 4},
+          "5x3_Marine_1_Alt":{name: "Battle of Reppah Pass", mode: 4},
+          "3x3_Pyeongtaek":{name: "38th Parallel", mode: 4},
+          "3x3_Montagne_4":{name: "Maze in Japan", mode: 4},
+          "3x3_Chongju":{name: "Korean Rocks", mode: 4},
+          "3x3_Montagne_1":{name: "Cold War Z", mode: 4},
+          "3x3_Gangjin":{name: "Floods", mode: 4},
+          "4x4_ThreeMileIsland":{name: "Sun of Juche (Three Miles Island long)", mode: 4},
+          "4x4_ThreeMileIsland_Alt":{name: "Final Meltdown (Three Miles Island larg)", mode: 4},
+          "5x3_Marine_1":{name: "Strait to the point (nav)", mode: 4},
+          "3x3_Marine_2":{name: "Smoke in the water (nav)", mode: 4},
+          "4x3_Gjoll":{name: "Heart-Breaking", mode: 4},
+          "3x3_Asgard":{name: "Crown Combes", mode: 4},
+              
+          //10vs10
+          "5x3_Asgard_10v10":{name: "Asgard", mode: 10},
+          "5x3_Gjoll_10v10":{name: "Gjoll", mode: 10},
+          "4x4_Russian_Roulette":{name: "Russian Roulette", mode: 10}
+        },
+        mapNames: [],
+        current: {
+          profile: 'New server',
+          ServerName: "New Wargame Server",
+          IP: "1.2.3.4",
+          Port: "1234",
+          RconPassword: "123456",
+          Password: "",
+          Map: "3x3_Marine_3",
+          VictoryCond: 1,
+          GameType: 0,
+          Private: 0,
+          InitMoney: 11000,
+          ScoreLimit: 23000,
+          TimeLimit: 60,
+          IncomeRate: 4,
+          NbMinPlayer: 20,
+          WarmupCountdown: 12,
+          DeploiementTimeMax: 180,
+          LoadingTimeMax: 60,
+          DebriefingTimeMax: 90,
+          DeltaMaxTeamSize: 10,
+          MaxTeamSize: 10,
+          ThematicConstraint: -1,
+          NationConstraint: -1,
+          DateConstraint: -1,
+          Launch: 0,
+          MapName: 'Another D-Day in Paradise (nav) 3vs3',
+          AutoConnect: false,
+          AutoRefresh: false
+        },
+        id: 0,
+        profile: '',
+        currentProfile: '',
+        presets: {},
+        presetSize: 0,
+        connected: false,
+        players: 0,
+        playerList: [],
+        ipc: null,
+        previewMap: false,
+        cmd: '',
+        text: '',
+        deck: '',
+        currentPlayer: 0,
+        show: false,
+        create: false
+      },
+      created: function() {
+        this.ipc = require('electron').ipcRenderer
+
+        var list = [];
+        var presets = localStorage.getItem("presets");
+        var currentProfile = localStorage.getItem("profile");
+        
+        if(presets) {
+          presets = JSON.parse(presets);
+          this.presets = presets;
+
+          if(currentProfile) {
+            this.currentProfile = currentProfile;
+          }
+        } else {
+          this.save();
+        }
+
+        this.calc();
+
+        this.IncomeRate = ['0','-40%','-20%','-','+20%','+40%'][this.current.IncomeRate];
+
+        var id = localStorage.getItem("id");
+
+        if(!id) {
+          id = Math.floor((Date.now()/1000));
+          localStorage.setItem("id", id);
+        }
+
+        this.id = id;
+        
+        this.ipc.on('logged-' + this.id, this.logged);
+        this.ipc.on('show-player-list-' + this.id, this.showPlayers);
+
+        if(this.current.AutoConnect) {
+          this.connect();
+        }
+
+        setInterval(this.autoReloadPlayers, 6000);
+      },
+      watch: {
+        'current.IP': function() {
+          this.disconnect();
+        },
+        'current.Port': function() {
+          this.disconnect();
+        },
+        'current.RconPassword': function() {
+          this.disconnect();
+        },
+        'current.ServerName': function() {
+          this.command('setsvar ServerName ' + this.current.ServerName);
+        },
+        'current.Password': function() {
+          this.command('setsvar Password ' + this.current.Password);
+        },
+        'current.Map': function() {
+          var prefix = this.current.VictoryCond == 4 ? 'Conquete_' : 'Destruction_';
+          this.current.MapName = this.maps[this.current.Map].name;
+          this.command('setsvar Map ' + prefix + this.current.Map);
+        },
+        'current.VictoryCond': function() {
+          this.command('setsvar VictoryCond ' + this.current.VictoryCond);
+        },
+        'current.GameType': function() {
+          this.command('setsvar GameType ' + this.current.GameType);
+        },
+        'current.Private': function() {
+          this.command('setsvar Private ' + this.current.Private);
+        },
+        'current.NbMinPlayer': function() {
+          this.command('setsvar NbMinPlayer ' + this.current.NbMinPlayer);
+        },
+        'current.MaxTeamSize': function() {
+          this.command('setsvar NbMaxPlayer ' + (this.current.MaxTeamSize * 2));
+          this.command('setsvar MaxTeamSize ' + this.current.MaxTeamSize);
+          this.command('setsvar DeltaMaxTeamSize ' + this.current.MaxTeamSize);
+        },
+        'current.InitMoney': function() {
+          this.command('setsvar InitMoney ' + this.current.InitMoney);
+        },
+        'current.ScoreLimit': function() {
+          this.command('setsvar ScoreLimit ' + this.current.ScoreLimit);
+        },
+        'current.TimeLimit': function() {
+          this.command('setsvar TimeLimit ' + (this.current.TimeLimit * 60));
+        },
+        'current.IncomeRate': function(val) {
+          this.command('setsvar IncomeRate ' + this.current.IncomeRate);
+          this.IncomeRate = ['0','-40%','-20%','-','+20%','40%'][val];
+        },
+        'current.ThematicConstraint': function() {
+          this.command('setsvar ThematicConstraint ' + this.current.ThematicConstraint);
+        },
+        'current.NationConstraint': function() {
+          this.command('setsvar NationConstraint ' + this.current.NationConstraint);
+        },
+        'current.DateConstraint': function() {
+          this.command('setsvar DateConstraint ' + this.current.DateConstraint);
+        },
+        'current.WarmupCountdown': function() {
+          this.command('setsvar WarmupCountdown ' + this.current.WarmupCountdown);
+        },
+        'current.DeploiementTimeMax': function() {
+          this.command('setsvar DeploiementTimeMax ' + this.current.DeploiementTimeMax);
+        },
+        'current.LoadingTimeMax': function() {
+          this.command('setsvar LoadingTimeMax ' + this.current.LoadingTimeMax);
+        },
+        'current.DebriefingTimeMax': function() {
+          this.command('setsvar DebriefingTimeMax ' + this.current.DebriefingTimeMax);
+        },
+        'current.AutoRefresh': function() {
+          this.save();
+        },
+        currentProfile: function(profile) {
+          this.current = this.presets[profile];
+          localStorage.setItem('profile', profile);
+
+          this.connected = false;
+          this.players = 0;
+          this.playerList = [];
+
+          if(this.current.AutoConnect) {
+            this.connect();
+          }
+        },
+        presets: function(val) {
+        },
+        deep: true
+      },
+      methods: {
+        connect: function () {
+          this.ipc.send('login', {
+            id: this.id,
+            ip: this.current.IP,
+            port: this.current.Port,
+            password: this.current.RconPassword
+          });
+
+          setTimeout(function() {
+            this.connected = false;
+          }, 6000);
+
+          this.current.AutoConnect = true;
+          this.save();
+        },
+        disconnect: function() {
+          this.connected = false;
+          this.players = 0;
+          this.playerList = [];
+        },
+        logged: function(event, data) {
+          this.connected = data;
+
+          if(data) {
+            this.command('display_all_clients');
+          }
+        },
+        showPlayers: function(event, data) {
+          this.players = data.length;
+          this.playerList = data;
+
+          if(this.currentProfile == 0) {
+            return;
+          }
+
+          var flag = false;
+
+          for (const player of data) {
+            if(player.id == this.currentPlayer) {
+              flag = true;
+              break;
+            }
+          }
+
+          if(!flag) {
+            this.currentPlayer = 0;
+          }
+        },
+        reloadPlayers: function() {
+          this.command('display_all_clients');
+        },
+        autoReloadPlayers: function() {
+          if(this.current.AutoRefresh) {
+            this.reloadPlayers();
+          }
+        },
+        showDialog: function() {
+          this.show = true;
+        },
+        preview: function(map) {
+          console.log(map);
+        },
+        copy: function() {
+          const input = document.createElement('input');
+          document.body.appendChild(input);
+          input.setAttribute('value', btoa(encodeURIComponent(JSON.stringify(this.presets))));
+          input.select();
+
+          if (document.execCommand('copy')) {
+            document.execCommand('copy');
+          }
+
+          document.body.removeChild(input);
+        },
+        adjust: function(param, flag) {
+          var offset = param == 'TimeLimit' ? 5 : 1000;
+          if(flag) {
+            offset = -offset;
+          }
+          this.current[param] = (this.current[param] * 1) + offset;
+        },
+        command: function(cmd) {
+          this.save();
+
+          if(!this.connected) {
+            return;
+          }
+
+          this.ipc.send('command', {id: this.id, cmd: cmd});
+        },
+        manualCommand: function() {
+          this.command(this.cmd)
+        },
+        randomMap: function() {
+          if(this.mapNames.length == 0) {
+            for (const key in this.maps) {
+              this.mapNames.push(key);
+            }
+          }
+
+          this.current.Map = this.mapNames[Math.floor(Math.random() * this.mapNames.length)];
+        },
+        choicePlayer: function(id) {
+          this.currentPlayer = id;
+        },
+        ban: function(id) {
+          this.command("ban " + id + " 1")
+        },
+        kick: function(id) {
+          this.command("kick " + id)
+        },
+        move: function(id, team) {
+          this.command("setpvar " + id + " PlayerAlliance " + team);
+        },
+        launch: function() {
+          this.command("launch");
+        },
+        cancelLaunch: function() {
+          this.command("cancel_launch");
+        },
+        setDeck: function() {
+          this.command("setpvar " + this.currentPlayer + " PlayerDeckContent " + this.deck);
+          this.currentPlayer = 0;
+          this.deck = '';
+        },
+        push: function() {
+          this.command('setsvar ServerName ' + this.current.ServerName);
+          this.command('setsvar Password ' + this.current.Password);
+
+          var prefix = this.current.VictoryCond == 4 ? 'Conquete_' : 'Destruction_';
+          this.current.MapName = this.maps[this.current.Map].name;
+          this.command('setsvar Map ' + prefix + this.current.Map);
+          this.command('setsvar VictoryCond ' + this.current.VictoryCond);
+          this.command('setsvar GameType ' + this.current.GameType);
+          this.command('setsvar Private ' + this.current.Private);
+          this.command('setsvar NbMinPlayer ' + this.current.NbMinPlayer);
+          this.command('setsvar NbMaxPlayer ' + (this.current.MaxTeamSize * 2));
+          this.command('setsvar MaxTeamSize ' + this.current.MaxTeamSize);
+          this.command('setsvar DeltaMaxTeamSize ' + this.current.MaxTeamSize);
+          this.command('setsvar InitMoney ' + this.current.InitMoney);
+          this.command('setsvar ScoreLimit ' + this.current.ScoreLimit);
+          this.command('setsvar TimeLimit ' + (this.current.TimeLimit * 60));
+          this.command('setsvar IncomeRate ' + this.current.IncomeRate);
+          this.command('setsvar ThematicConstraint ' + this.current.ThematicConstraint);
+          this.command('setsvar NationConstraint ' + this.current.NationConstraint);
+          this.command('setsvar DateConstraint ' + this.current.DateConstraint);
+          this.command('setsvar WarmupCountdown ' + this.current.WarmupCountdown);
+          this.command('setsvar DeploiementTimeMax ' + this.current.DeploiementTimeMax);
+          this.command('setsvar LoadingTimeMax ' + this.current.LoadingTimeMax);
+          this.command('setsvar DebriefingTimeMax ' + this.current.DebriefingTimeMax);
+        },
+        plus: function() {
+          this.create = true;
+          this.profile = 'New server';
+        },
+        cancel: function() {
+          this.create = false;
+          this.profile = '';
+        },
+        deletePreset: function() {
+          var presets = JSON.parse(JSON.stringify(this.presets));
+          delete presets[this.currentProfile];
+
+          var current = null;
+          
+          for (const key in presets) {
+            current = presets[key];
+            break;
+          }
+          
+          if(current == null)
+          {
+            return;
+          }
+          
+          this.presets = presets;
+          this.current = current;
+          this.currentProfile = current.profile;
+          this.save();
+        },
+        saveNewPreset: function() {
+          if(!this.profile.trim().length) {
+            return;
+          }
+
+          this.disconnect();
+
+          var obj = JSON.parse(JSON.stringify(this.current));
+
+          obj.profile = this.profile;
+          obj.AutoConnect = false;
+          obj.AutoRefresh = false;
+
+          this.presets[this.profile] = obj;
+
+          this.presets = JSON.parse(JSON.stringify(this.presets));
+          this.currentProfile = obj.profile;
+
+          localStorage.setItem('presets', JSON.stringify(this.presets));
+          localStorage.setItem('profile', this.currentProfile);
+
+          this.profile = '';
+          this.create = false;
+          
+          this.calc();
+        },
+        save: function() {
+          var init = false;
+          var profile = this.currentProfile.trim().length ? this.currentProfile : this.current.profile;
+
+          if(this.create) {
+            return;
+          }
+
+          var obj = JSON.parse(JSON.stringify(this.current));
+          var presets = JSON.parse(JSON.stringify(this.presets));
+          presets[profile] = obj;
+
+          this.presets = presets;
+          this.currentProfile = profile;
+
+          localStorage.setItem('presets', JSON.stringify(presets));
+          localStorage.setItem('profile', profile);
+
+          this.calc();
+        },
+        calc: function() {
+          var n = 0;
+          for (const key in this.presets) {
+            n++;
+          }
+
+          this.presetSize = n;
+        },
+        cancelImport: function() {
+          this.show = false;
+          this.text = '';
+        },
+        importPresets: function() {
+          this.show = false;
+
+          var presets = null;
+          try {
+            presets = JSON.parse(decodeURIComponent(atob(this.text)));
+          } catch (error) {
+            try{
+              presets = JSON.parse(this.text);
+            } catch(error) {
+              return;
+            }
+          }
+          
+          if((typeof presets) != "object") {
+            return;
+          }
+          
+          var current = null;
+          
+          for (const key in presets) {
+            current = presets[key];
+            break;
+          }
+          
+          if(current == null)
+          {
+            return;
+          }
+          
+          this.presets = presets;
+          this.current = current;
+          this.currentProfile = current.profile;
+          this.text = '';
+          this.save();
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>
