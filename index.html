@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wargame Web RCON</title>
+  <link rel='stylesheet' type='text/css' href="/assets/css/bootstrap.min.css">
+  <link rel='stylesheet' type='text/css' href="/assets/css/style.css?v=20220207">
+
+  <script type="text/javascript" src="/assets/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/vue.min.js"></script>
+  <script src="/assets/js/moment.min.js"></script>
+  <script src="/assets/js/deck-decoder.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://unpkg.com/vue-toasted"></script>
+</head>
+
+<body>
+  <div style="position:absolute;top:-1000px;left:-1000px;">
+    <input type="text" name="fakeusernameremembered" />
+    <input type="password" name="fakepasswordremembered" />
+  </div>
+  <div id="app" class="wrd-container" style="position: relative;min-height: 100vh;">
+    <div class="container-fluid" :style="style">
+      <div class="row">
+        <div class="col server-name">
+          <img src="/assets/img/locked.png" style="width:18px;padding-bottom:6px;" v-if="current.settings.Private==1">
+          <img :src="'/assets/img/gamemode_'+ current.settings.VictoryCond +'.jpg'" style="width:24px;padding-bottom:4px;">
+          {{current.settings.ServerName}}
+          <i class="wrd-status" v-bind:class="{'wrd-connected': info.connected}"></i>
+        </div>
+        <i class="wrd-volumn" style="background-image: url('/assets/img/mute.png');" v-if="info.mute && info.mode == 1" v-on:click="unmute"></i>
+        <i class="wrd-volumn" style="background-image: url('/assets/img/volume.png');" v-if="!info.mute && info.mode == 1" v-on:click="mute"></i>
+      </div>
+      
+      <div class="row">
+        <div class="col-xl-6 col-lg-12">
+          <div class="row mb-1">
+            <div class="col wrd-title">SERVER CONNECTION</div>
+          </div>
+          
+          <div class="row mb-1">
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Host</label>
+                <div class="col-sm-8 p-0">
+                  <input type="text" class="form-control form-control-sm wrd-form border-0" v-model="current.server.host">
+                </div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Password</label>
+                <div class="col-sm-8 p-0">
+                  <input type="password" class="form-control form-control-sm wrd-form border-0" v-model="current.server.password">
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row mb-1">
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Preset</label>
+                <div class="col-sm-8 p-0">
+                  <div class="input-group">
+                      
+                    <div class="btn-group" style="flex: 1 1 auto; border-radius: 0px;" v-if="!info.create">
+                      <button class="btn btn-secondary btn-sm dropdown-toggle" style="border-radius: 0;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                        {{current.name}}
+                      </button>
+                      <ul class="dropdown-menu w-100 p-0">
+                        <li v-for="(item, key, index) in presets" v-bind:value="key" v-on:click="switchPreset(item)">
+                          <div class="dropdown-item d-flex border border-dark border-top-0 pe-2">
+                            <div class="me-auto ms-2 wrd-map-name">{{item.name}}</div>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                    <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="" placeholder="Enter a preset name here" v-model="info.name" v-if="info.create">
+                    <span class="input-group-btn" v-if="!info.create">
+                      <button class="btn wrd-button-1" v-on:click="toggle('create', true)">ADD</button>
+                    </span>
+                    <span class="input-group-btn" v-if="!info.create">
+                      <button class="btn wrd-button-1" v-on:click="deletePreset()">DEL</button>
+                    </span>
+                    <span class="input-group-btn" v-if="info.create">
+                      <button class="btn wrd-button-1" v-on:click="createPreset()">SAVE</button>
+                    </span>
+                    <span class="input-group-btn" v-if="info.create">
+                      <button class="btn wrd-button-1" v-on:click="toggle('create', false)">BACK</button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col text-end" style="margin-right:-11px;margin-left:11px;">
+              <button type="button" class="btn wrd-button-1" v-on:click="connect" v-if="!info.connected" data-bs-toggle="tooltip" data-bs-placement="top" title="Connect to the current server">Connect</button>
+              <button type="button" class="btn wrd-button-1" v-on:click="disconnect" v-if="info.connected" data-bs-toggle="tooltip" data-bs-placement="top" title="Disconnect from the current server">Disconnect</button>
+              <button type="button" class="btn wrd-button-1" v-on:click="push" v-if="info.connected" data-bs-toggle="tooltip" data-bs-placement="top" title="Push all settings to the current server">Push</button>
+              <button type="button" class="btn wrd-button-1" v-on:click="showImportDialog" data-bs-toggle="tooltip" data-bs-placement="top" title="Import preset information">Import</button>
+              <button type="button" class="btn wrd-button-1" v-on:click="copy" data-bs-toggle="tooltip" data-bs-placement="top" title="Export presets information to clipboard">Export</button>
+            </div>
+          </div>
+
+          <div class="row mb-1">
+            <div class="col wrd-title">GAME SETTINGS</div>
+          </div>
+          
+          <div class="row mb-1">
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Lobby Name</label>
+                <div class="col-sm-8 p-0">
+                  <input type="text" class="form-control form-control-sm wrd-form border-0" v-model="current.settings.ServerName" @focus="focus('ServerName')" @blur="blur('ServerName')">
+                </div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Password</label>
+                <div class="col-sm-8 p-0">
+                  <input type="text" class="form-control form-control-sm wrd-form border-0" v-model="current.settings.Password" @focus="focus('Password')" @blur="blur('Password')">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-1">
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Game Mode</label>
+                <div class="col-sm-8 p-0">
+                  <div class="btn-group w-100">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" style="border-radius: 0;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                      <img :src="'/assets/img/gamemode_'+ current.settings.VictoryCond + '.jpg'" class="img-fluid wrd-icon-2 ms-1 me-1">{{mapping.gameMode[current.settings.VictoryCond]}}
+                    </button>
+                    <ul class="dropdown-menu w-100 p-0">
+                      <li v-for="(item, key, index) in mapping.gameMode" v-bind:value="key"  v-on:click="updateSetting('VictoryCond',key)">
+                        <div class="dropdown-item d-flex border border-dark border-top-0 pe-2">
+                          <img :src="'/assets/img/gamemode_'+ key + '.jpg'" class="img-fluid wrd-icon-2 ms-1">
+                          <div class="me-auto ms-2 wrd-map-name">{{item}}</div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Opposition</label>
+                <div class="col-sm-8 p-0">
+                  <div class="btn-group w-100">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" style="border-radius: 0;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                      <img :src="'/assets/img/gametype_'+ current.settings.GameType + '.png'" class="img-fluid wrd-map-icon ms-1 me-1" style="margin-bottom: 2px;">{{mapping.gameType[current.settings.GameType]}}
+                    </button>
+                    <ul class="dropdown-menu w-100 p-0">
+                      <li v-for="(item, key, index) in mapping.gameType" v-bind:value="key"  v-on:click="updateSetting('GameType',key)">
+                        <div class="dropdown-item d-flex border border-dark border-top-0 pe-2">
+                          <img :src="'/assets/img/gametype_'+ key + '.png'" class="img-fluid wrd-map-icon ms-1">
+                          <div class="me-auto ms-2 wrd-map-name">{{item}}</div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-1" style="height: 33px;">
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Accessibility</label>
+                <div class="col-sm-8 p-0">
+                  <div class="btn-group w-100">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" style="border-radius: 0;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                      {{current.settings.Private>0?'Private':'Public'}}
+                    </button>
+                    <ul class="dropdown-menu w-100 p-0">
+                      <li v-on:click="updateSetting('Private',0)">
+                        <div class="dropdown-item d-flex border border-dark border-top-0 pe-2">
+                          <div class="me-auto ms-2 wrd-map-name">Public</div>
+                        </div>
+                      </li>
+                      <li v-on:click="updateSetting('Private',1)">
+                        <div class="dropdown-item d-flex border border-dark border-top-0 pe-2">
+                          <div class="me-auto ms-2 wrd-map-name">Private</div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col text-center" style="margin-right:-11px;margin-left:11px;display:flex">
+              <label class="wrd-text me-2" style="flex:auto;">{{info.state}}<span v-if="info.mode == 1 && info.time.length > 0"> - {{info.time}}</span></label>
+              <button type="button" class="btn ms-1 wrd-button-1" v-on:click="launch" v-if="info.connected && (info.mode == 2 || info.state == 'Unknown' || info.state == 'Waiting for players')">Launch</button>
+              <button type="button" class="btn ms-1 wrd-button-1" v-on:click="cancelLaunch" v-if="info.connected && (info.mode == 2 || info.state == 'Countdown')">Cancel Launch</button>
+            </div>
+          </div>
+
+          <div class="row mb-1">
+            <div class="col p-0">
+              <div class="input-group">
+                <div class="btn-group" style="flex:1 1 auto;border-radius:0;height:33px;">
+                  <button class="btn btn-secondary btn-sm dropdown-toggle w-100" style="border-radius: 0;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                    <img :src="'/assets/img/mapmode_'+ mapping.maps[current.settings.Map].mode + '.jpg'" class="img-fluid wrd-map-icon ms-1">
+                    <img src="/assets/img/water_1.png" class="img-fluid wrd-map-icon" v-if="mapping.maps[current.settings.Map].water==1">
+                    <img src="/assets/img/water_2.png" class="img-fluid wrd-map-icon" v-if="mapping.maps[current.settings.Map].water==2">
+                    {{mapping.maps[current.settings.Map].name}}
+                  </button>
+                  <ul class="dropdown-menu w-100 p-0 wrd-scroll" style="overflow-y: scroll;">
+                    <li v-for="(item, key, index) in mapping.maps" v-bind:value="key"  v-on:click="changeMap(key)">
+                      <div class="dropdown-item d-flex border border-dark border-top-0 pe-2">
+                        <img :src="'/assets/img/mapmode_'+ item.mode + '.jpg'" class="img-fluid wrd-map-icon ms-1">
+                        <img src="/assets/img/water_1.png" class="img-fluid wrd-map-icon ms-1" v-if="item.water==1">
+                        <img src="/assets/img/water_2.png" class="img-fluid wrd-map-icon ms-1" v-if="item.water==2">
+                        <div class="me-auto ms-2 wrd-map-name">{{item.name}}</div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <span class="input-group-btn" v-if="info.mode == 1">
+                  <button class="btn wrd-button-1" v-on:click="addToRotationList()">+</button>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-1">
+            <div class="col wrd-title">GAME CONFIGURATION</div>
+          </div>
+
+          <div class="row mb-1">
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Teams</label>
+                <div class="col-sm-8 p-0">
+                  <div class="btn-group w-100">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" style="border-radius: 0;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                      {{current.settings.MaxTeamSize}} vs {{current.settings.MaxTeamSize}}
+                    </button>
+                    <ul class="dropdown-menu w-100 p-0">
+                      <li v-for="n in 10" v-on:click="updateSetting('MaxTeamSize',n)">
+                        <div class="dropdown-item d-flex border border-dark border-top-0 pe-2">
+                          <div class="me-auto ms-2 wrd-map-name">{{n}} vs {{n}}</div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Income</label>
+                <div class="col-sm-8 p-0">
+                  <div class="btn-group w-100">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" style="border-radius: 0;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                      {{mapping.incomeRate[current.settings.IncomeRate]}}
+                    </button>
+                    <ul class="dropdown-menu w-100 p-0">
+                      <li v-for="(item, key, index) in mapping.incomeRate" v-bind:value="key"  v-on:click="updateSetting('IncomeRate',key)">
+                        <div class="dropdown-item d-flex border border-dark border-top-0 pe-2">
+                          <div class="me-auto ms-2 wrd-map-name">{{item}}</div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-1">
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Start points</label>
+                <div class="col-sm-8 p-0">
+                  <div class="input-group">
+                    <span class="input-group-btn">
+                      <button class="btn wrd-button-1" v-on:click="updateNumber('InitMoney', -1000)">-</button>
+                    </span>
+                    <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="10000" v-model="current.settings.InitMoney">
+                    <span class="input-group-btn">
+                      <button class="btn wrd-button-1" v-on:click="updateNumber('InitMoney', 1000)">+</button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Victory points</label>
+                <div class="col-sm-8 p-0">
+                  <div class="input-group">
+                    <span class="input-group-btn">
+                      <button class="btn wrd-button-1" v-on:click="updateNumber('ScoreLimit', -1000)">-</button>
+                    </span>
+                    <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="20000" v-model="current.settings.ScoreLimit">
+                    <span class="input-group-btn">
+                      <button class="btn wrd-button-1" v-on:click="updateNumber('ScoreLimit', 1000)">+</button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          
+          <div class="row mb-1">
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Time limit</label>
+                <div class="col-sm-8 p-0">
+                  <div class="input-group">
+                    <span class="input-group-btn">
+                      <button class="btn wrd-button-1" v-on:click="updateNumber('TimeLimit', -5)">-</button>
+                    </span>
+                    <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="45" v-model="current.settings.TimeLimit">
+                    <span class="input-group-btn">
+                      <button class="btn wrd-button-1" v-on:click="updateNumber('TimeLimit', 5)">+</button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col"></div>
+
+          </div>
+
+          <div class="row mb-1">
+            <div class="col wrd-title">CONSTRAINTS</div>
+          </div>
+          
+          <div class="row mb-1" v-if="!(info.showDeckRestrict || info.showLevelRestrict || info.showNationRestrict)">
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Thematic</label>
+                <div class="col-sm-8 p-0">
+                  <div class="btn-group w-100">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" style="border-radius: 0;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                      <img :src="'/assets/img/thematic_'+ current.settings.ThematicConstraint + '.png'" class="img-fluid wrd-icon-2 ms-1 me-1">{{mapping.thematic[current.settings.ThematicConstraint]}}
+                    </button>
+                    <ul class="dropdown-menu w-100 p-0">
+                      <li v-for="(item, index) in mapping.thematicSeq" v-bind:value="index" v-on:click="updateSetting('ThematicConstraint',item)">
+                        <div class="dropdown-item d-flex border border-dark border-top-0 pe-2">
+                          <img :src="'/assets/img/thematic_' + item + '.png'" class="img-fluid wrd-icon-2 ms-1">
+                          <div class="me-auto ms-2 wrd-map-name">{{mapping.thematic[item]}}</div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col text-end" style="margin-right: -11px; margin-left: 11px;">
+              <button type="button" class="btn wrd-button-1" v-on:click="toggle('showLevelRestrict', true)" v-if="info.mode == 1">Level Restrict</button>
+              <button type="button" class="btn wrd-button-1" v-on:click="toggle('showDeckRestrict', true)" v-if="info.mode == 1">Deck Restrict</button>
+              <button type="button" class="btn wrd-button-1" v-on:click="toggle('showNationRestrict', true)" v-if="info.mode == 1">Nation Restrict</button>
+            </div>
+
+          </div>
+
+          <div class="row mb-1" v-if="!(info.showDeckRestrict || info.showLevelRestrict || info.showNationRestrict)">
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Nations</label>
+                <div class="col-sm-8 p-0">
+                  
+                  <div class="btn-group w-100">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" style="border-radius: 0;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                      <img :src="'/assets/img/nation_'+ current.settings.NationConstraint + '.png'" class="img-fluid wrd-icon-2 ms-1 me-1">{{mapping.nation[current.settings.NationConstraint]}}
+                    </button>
+                    <ul class="dropdown-menu w-100 p-0">
+                      <li v-for="(item, index) in mapping.nationSeq" v-bind:value="index" v-on:click="updateSetting('NationConstraint',item)">
+                        <div class="dropdown-item d-flex border border-dark border-top-0 pe-2">
+                          <img :src="'/assets/img/nation_' + item + '.png'" class="img-fluid wrd-icon-2 ms-1">
+                          <div class="me-auto ms-2 wrd-map-name">{{mapping.nation[item]}}</div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Era</label>
+                <div class="col-sm-8 p-0">
+                  <div class="btn-group w-100">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" style="border-radius: 0;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                      <img :src="'/assets/img/era_'+ current.settings.DateConstraint + '.png'" class="img-fluid wrd-icon-2 ms-1 me-1">{{mapping.date[current.settings.DateConstraint]}}
+                    </button>
+                    <ul class="dropdown-menu w-100 p-0">
+                      <li v-for="(item, index) in mapping.dateSeq" v-bind:value="index" v-on:click="updateSetting('DateConstraint',item)">
+                        <div class="dropdown-item d-flex border border-dark border-top-0 pe-2">
+                          <img :src="'/assets/img/era_' + item + '.png'" class="img-fluid wrd-icon-2 ms-1">
+                          <div class="me-auto ms-2 wrd-map-name">{{mapping.date[item]}}</div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          
+          <div class="row mb-1" v-if="info.showDeckRestrict">
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Restrict deck</label>
+                <div class="col-sm-8 p-0">
+                  <div class="btn-group w-100">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" style="border-radius: 0;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                      <img :src="'/assets/img/thematic_'+ current.restrict.deck + '.png'" class="img-fluid wrd-icon-2 ms-1 me-1">{{mapping.thematic[current.restrict.deck]}}
+                    </button>
+                    <ul class="dropdown-menu w-100 p-0">
+                      <li v-for="(item, index) in mapping.restrict" v-bind:value="index" v-on:click="updateRestrictDeck(item)">
+                        <div class="dropdown-item d-flex border border-dark border-top-0 pe-2">
+                          <img :src="'/assets/img/thematic_' + item + '.png'" class="img-fluid wrd-icon-2 ms-1">
+                          <div class="me-auto ms-2 wrd-map-name">{{mapping.thematic[item]}}</div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col text-end" style="margin-right: -11px; margin-left: 11px;">
+              <button type="button" class="btn wrd-button-1" v-on:click="toggle('showDeckRestrict', false)">Back</button>
+            </div>
+
+          </div>
+
+          <div class="row mb-1" v-if="info.showDeckRestrict">
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Blue</label>
+                <div class="col-sm-8 p-0">
+                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.blue" @blur="updateRestrict('blue', 1)">
+                </div>
+              </div>
+            </div>
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Red</label>
+                <div class="col-sm-8 p-0">
+                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.red" @blur="updateRestrict('red', 1)">
+                </div>
+              </div>
+            </div>
+
+          </div>
+          
+
+          <div class="row mb-1" v-if="info.showNationRestrict">
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Restrict nation</label>
+                <div class="col-sm-8 p-0" style="display: flex">
+                  <div class="btn-group" style="flex: 1 auto;">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" style="border-radius: 0;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                      <img :src="'/assets/img/'+ current.restrict.nation.blue.type + '.png'" class="img-fluid wrd-icon-3 ms-1 me-1">
+                    </button>
+
+                    <ul class="dropdown-menu p-0 wrd-scroll" style="overflow-y: scroll;">
+                      <li v-for="(item, index) in mapping.nationCode.blue" v-bind:value="index" v-on:click="updateRestrictNation('blue', item)">
+                        <div class="dropdown-item d-flex border border-dark border-top-0">
+                          <img :src="'/assets/img/' + item + '.png'" class="img-fluid wrd-icon-3 ms-1">
+                        </div>
+                      </li>
+                    </ul>
+
+                  </div>
+
+                  <label style="color: #FFF; margin: 0 8px; align-self: center">VS</label>
+                  
+                  <div class="btn-group" style="flex: 1 auto;">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" style="border-radius: 0;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                      <img :src="'/assets/img/'+ current.restrict.nation.red.type + '.png'" class="img-fluid wrd-icon-3 ms-1 me-1">
+                    </button>
+
+                    <ul class="dropdown-menu p-0 wrd-scroll" style="overflow-y: scroll;">
+                      <li v-for="(item, index) in mapping.nationCode.red" v-bind:value="index" v-on:click="updateRestrictNation('red', item)">
+                        <div class="dropdown-item d-flex border border-dark border-top-0">
+                          <img :src="'/assets/img/' + item + '.png'" class="img-fluid wrd-icon-3 ms-1">
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <div class="col text-end" style="margin-right: -11px; margin-left: 11px;">
+              <button type="button" class="btn wrd-button-1" v-on:click="toggle('showNationRestrict', false)">Back</button>
+            </div>
+
+          </div>
+
+          <div class="row mb-1" v-if="info.showNationRestrict">
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Blue</label>
+                <div class="col-sm-8 p-0">
+                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.nation.blue.deck" @blur="updateRestrict('blue', 2)">
+                </div>
+              </div>
+            </div>
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Red</label>
+                <div class="col-sm-8 p-0">
+                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.nation.red.deck" @blur="updateRestrict('red', 2)">
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+
+          <div class="row mb-1" v-if="info.showLevelRestrict">
+
+            <div class="col">
+            </div>
+
+            <div class="col text-end" style="margin-right: -11px; margin-left: 11px;">
+              <button type="button" class="btn wrd-button-1" v-on:click="toggle('showLevelRestrict', false)">Back</button>
+            </div>
+
+          </div>
+
+          <div class="row mb-1" v-if="info.showLevelRestrict">
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Min Level</label>
+                <div class="col-sm-8 p-0">
+                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the min level, 0 is no restrict" v-model="current.restrict.min" @blur="updateRestrict('blue', 2)">
+                </div>
+              </div>
+            </div>
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Max Level</label>
+                <div class="col-sm-8 p-0">
+                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the max level, 0 is no restrict" v-model="current.restrict.max" @blur="updateRestrict('red', 2)">
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="row mb-1">
+            <div class="col wrd-title">ADVANCED SETTINGS</div>
+          </div>
+
+          <div class="row mb-1" v-if="!info.showMotd">
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Required players</label>
+                <div class="col-sm-8 p-0">
+                  <div class="input-group">
+                    <span class="input-group-btn">
+                      <button class="btn wrd-button-1" v-on:click="updateNumber('NbMinPlayer', -1, 2, current.settings.MaxTeamSize * 2)">-</button>
+                    </span>
+                    <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="20" v-model="current.settings.NbMinPlayer">
+                    <span class="input-group-btn">
+                      <button class="btn wrd-button-1" v-on:click="updateNumber('NbMinPlayer', 1, 2, current.settings.MaxTeamSize * 2)">+</button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col text-end" style="margin-right: -11px; margin-left: 11px;">
+              <button type="button" class="btn wrd-button-1" v-on:click="toggle('showMotd', true)" v-if="info.mode==1">Prompt Message</button>
+            </div>
+
+          </div>
+
+          <div class="row mb-1" v-if="!info.showMotd">
+            
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Deployment time</label>
+                <div class="col-sm-8 p-0">
+                  <div class="input-group">
+                    <span class="input-group-btn">
+                      <button class="btn wrd-button-1" v-on:click="updateNumber('DeploiementTimeMax', -5, 30)">-</button>
+                    </span>
+                    <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="180" v-model="current.settings.DeploiementTimeMax">
+                    <span class="input-group-btn">
+                      <button class="btn wrd-button-1" v-on:click="updateNumber('DeploiementTimeMax', 5, 30, 300)">+</button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Max time loading</label>
+                <div class="col-sm-8 p-0">
+                  <div class="input-group">
+                    <span class="input-group-btn">
+                      <button class="btn wrd-button-1" v-on:click="updateNumber('LoadingTimeMax', -5, 30)">-</button>
+                    </span>
+                    <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="60" v-model="current.settings.LoadingTimeMax">
+                    <span class="input-group-btn">
+                      <button class="btn wrd-button-1" v-on:click="updateNumber('LoadingTimeMax', 5, 30, 180)">+</button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="row mb-1" v-if="!info.showMotd">
+            
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Debrief time</label>
+                <div class="col-sm-8 p-0">
+                  <div class="input-group">
+                    <span class="input-group-btn">
+                      <button class="btn wrd-button-1" v-on:click="updateNumber('DebriefingTimeMax', -5, 30, 180)">-</button>
+                    </span>
+                    <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="90" v-model="current.settings.DebriefingTimeMax">
+                    <span class="input-group-btn">
+                      <button class="btn wrd-button-1" v-on:click="updateNumber('DebriefingTimeMax', 5, 30, 180)">+</button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col">
+              <div class="row">
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Countdown</label>
+                <div class="col-sm-8 p-0">
+                  <div class="input-group">
+                    <span class="input-group-btn">
+                      <button class="btn wrd-button-1" v-on:click="updateNumber('WarmupCountdown', -5, 10, 30)">-</button>
+                    </span>
+                    <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="60" v-model="current.settings.WarmupCountdown">
+                    <span class="input-group-btn">
+                      <button class="btn wrd-button-1" v-on:click="updateNumber('WarmupCountdown', 5, 10, 30)">+</button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="row mb-1" v-if="info.showMotd">
+
+            <div class="col">
+            </div>
+
+            <div class="col text-end" style="margin-right: -11px; margin-left: 11px;">
+              <button type="button" class="btn wrd-button-1" v-on:click="saveMOTD" v-if="info.mode==1">Save</button>
+            </div>
+
+          </div>
+
+          <div class="row mb-1" v-if="info.showMotd">
+            
+            <div class="col">
+              <div class="row">
+                <textarea class="wrd-form wrd-motd-text" v-model="current.motd" placeholder="You can type server message here, this message will be broadcast to the lobby before the game starts."></textarea>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+        <div class="col-xl-6 col-lg-12 d-flex flex-column">
+          <div class="row">
+            <div class="col-xl-6 col-lg-12">
+              <div class="row my-2">
+                <div class="col text-center">
+                  <img :src="'/assets/img/nation_'+current.settings.NationConstraint+'.png'" class="img-fluid rounded-1 wrd-border">
+                  <img :src="'/assets/img/thematic_'+current.settings.ThematicConstraint+'.png'" class="img-fluid rounded-1 wrd-border">
+                  <img :src="'/assets/img/era_'+current.settings.DateConstraint+'.png'" class="img-fluid rounded-1 wrd-border">
+                </div>
+              </div>
+              <div class="row">
+                <div class="col text-center">
+                  <img :src="currentMapPreview()" class="img-fluid rounded-1 wrd-border">
+                </div>
+              </div>
+              <div class="row my-2">
+                <div class="col text-center wrd-map-name">
+                  <img :src="'/assets/img/mapmode_'+ mapping.maps[current.settings.Map].mode + '.jpg'" class="img-fluid wrd-map-icon ms-1">
+                  <img src="/assets/img/water_1.png" class="img-fluid wrd-map-icon" v-if="mapping.maps[current.settings.Map].water==1">
+                  <img src="/assets/img/water_2.png" class="img-fluid wrd-map-icon" v-if="mapping.maps[current.settings.Map].water==2">
+                  {{mapping.maps[current.settings.Map].name}}
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-xl-6 col-lg-12 d-flex flex-column" v-if="info.mode == 2">
+            </div>
+            
+            <div class="col-xl-6 col-lg-12 d-flex flex-column" v-if="info.mode == 1">
+              <div class="row">
+                <div class="col wrd-title">AUTO ROTATION [{{info.rotationList.length}}]</div>
+              </div>
+              <div class="row mb-auto">
+                <div class="col p-0 wrd-auto-rotation-list disable-select wrd-scroll wrd-border" v-model="info.rotationList">
+                  <div class="wrd-empty" v-if="!info.rotationList.length">No data</div>
+                  <div v-if="info.rotationList.length" v-for="(item, key, index) in info.rotationList" v-bind:value="key" class="d-flex border border-dark border-top-0 wrd-rotation-item" v-bind:class="[current.settings.Map==item?'active':'']">
+                    <img :src="'/assets/img/mapmode_'+mapping.maps[item].mode+'.jpg'" class="img-fluid wrd-map-icon ms-1">
+                    <img src="/assets/img/water_1.png" class="img-fluid wrd-map-icon ms-1" v-if="mapping.maps[item].water==1">
+                    <img src="/assets/img/water_2.png" class="img-fluid wrd-map-icon ms-1" v-if="mapping.maps[item].water==2">
+                    <div class="me-auto ms-2 wrd-map-name" style="flex: auto;" v-on:click="changeMap(item)">{{mapping.maps[item].name}}</div>
+                    <div class="wrd-button-3 wrd-rotation-delete" style="padding: 0 18px;" v-on:click="removeFromRotationList(item)">DEL</div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col">
+                  <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" id="btnEnableAutoRotation" v-model="current.autoRotation">
+                      <label class="form-check-label wrd-map-name" style="font-size: 0.9em;" for="btnEnableAutoRotation">Enable random auto rotation</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row" style="height:100%;">
+            <div class="col p-0 ps-2" v-if="info.show==1" style="position: relative;">
+              <div class="wrd-player-list wrd-border disable-select wrd-scroll">
+                <div class="wrd-empty" v-if="!info.playerList.length">No data</div>
+                <div class="d-flex wrd-border-bottom" v-if="info.playerList.length" v-for="(item, index) in info.playerList" :key="item.id">
+                  <div :class="'wrd-player-status wrd-text ms-1 wrd-player-status-' + item.status.toLowerCase() " :title="item.status" v-if="info.mode == 1">{{ item.status.substr(0, 1) }}</div>
+                  <img class="img-fluid wrd-map-icon ms-1" :src="'/assets/img/gametype_' + (item.alliance * 1 + 1) + '.png'" v-if="info.mode == 1 && item.deckData">
+                  <div class="wrd-index ms-1">{{ index + 1 }}</div>
+                  <img class="wrd-flag ms-2" :src="'https://flagpedia.net/data/flags/h24/' + item.country.toLowerCase() + '.png'"  data-bs-toggle="tooltip" data-bs-placement="top" :title="fetchTooltip(item)" v-if="info.mode == 1 && item.country">
+                  <div class="me-auto ms-1 wrd-text" style="flex:1" :title="'IP: ' + item.ip" v-on:dblclick="changeName(item)" v-if="!item.changeName">{{item.name}}</div>
+                  <input type="text" class="wrd-inline-input" v-model="item.name" @blur="confirmChangeName(item)" v-on:keyup.enter="confirmChangeName(item)" :ref="`name_${item.id}`" v-if="item.changeName" />
+                  <img class="img-fluid wrd-type-icon ms-1" :src="'/assets/img/era_' + (item.deckData.era ^ 1) + '.png'" v-if="info.mode == 1 && item.deckData && item.deckData.era != 2">
+                  <img class="img-fluid wrd-type-icon ms-1" :src="'/assets/img/thematic_' + item.deckData.spec + '.png'" v-if="info.mode == 1 && item.deckData && item.deckData.spec != 7">
+                  <img class="img-fluid wrd-nation-icon ms-1" :src="'/assets/img/' + item.deckData.nation + '.png'" v-if="info.mode == 1 && item.deckData">
+                  <div class="wrd-text ms-2" style="width:100px;text-align: left;">ID: {{item.id}}</div>
+                  <div class="wrd-text ms-2" style="width:50px;text-align: left;" v-if="info.mode == 1 && item.level">LV: {{item.level}}</div>
+                  <div class="wrd-team" v-on:click="alliance(item,0)"><i class="wrd-team-blue me-1 ms-1"></i></div>
+                  <div class="wrd-team" v-on:click="alliance(item,1)"><i class="wrd-team-red me-1"></i></div>
+                  <div class="wrd-button-3 px-2 border border-dark " v-on:click="deck(item)">Deck</div>
+                  <div class="wrd-button-3 px-2 border border-dark " v-on:click="kick(item)">Kick</div>
+                  <div class="wrd-button-3 px-2 border border-dark " v-on:click="ban(item)">Ban</div>
+                </div>
+              </div>
+              
+              <div class="ps-2" style="position: absolute;top: 0; left: 0;width:100%;height:100%" v-if="info.showDeck">
+                <div class="wrd-modal-container">
+                  <div class="wrd-modal-mask" style="background: #487157; opacity: 1;"></div>
+                  <textarea class="wrd-deck wrd-modal-body" v-model="info.current.deck"></textarea>
+                  <div class="wrd-modal-button-group mb-1 me-2" style="background: #487157;position: relative;">
+                    <label style="text-align: left;position: absolute;top: 0;left: 0;" class="ms-2 wrd-text">Deck Name: {{info.current.deckName}}</label>
+                    <button type="button" class="btn wrd-button-1" v-on:click="confirm">Confirm</button>
+                    <button type="button" class="btn wrd-button-1" v-on:click="cancel">Cancel</button>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="ps-2" style="position: absolute;top: 0; left: 0;width:100%;height:100%" v-if="info.showBan">
+                <div class="wrd-modal-container">
+                  <div class="wrd-modal-mask" style="background: #487157; opacity: 1;"></div>
+                  <div style="flex: auto;color: #fff;z-index: 9999;display: flex;justify-content: center;align-items: center;flex-flow: column;">
+                    <div>Do you want to ban {{info.current.id}}:{{info.current.name}}?</div>
+                    <div style="min-width: 200px;display: flex;" class="mt-2">
+                      <label class="col-form-label col-form-label-sm wrd-label pe-3" style="color: #fff;">Time:</label>
+                      <div class="p-0" style="width:160px">
+                        <div class="btn-group w-100" style="border: 1px solid #484848;">
+                          <button class="btn btn-secondary btn-sm dropdown-toggle ps-3" style="border-radius: 0px;width: 160px;text-align: left;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                            {{mapping.time[info.banTime]}}
+                          </button>
+                          <ul class="dropdown-menu w-100 p-0">
+                            <li v-for="(item, key, index) in mapping.time" v-bind:value="key"  v-on:click="changeBanTime(key)">
+                              <div class="dropdown-item d-flex border border-dark border-top-0 pe-2">
+                                <div class="me-auto ms-2 wrd-map-name">{{item}}</div>
+                              </div>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                    <input type="text" class="form-control form-control-sm wrd-form border-0 wrd-reason mt-2" placeholder="You can type the reason (Optional)" v-model="info.current.reason">
+                  </div>
+                  <div class="wrd-modal-button-group mb-1 me-2" style="background: #487157;position: relative;">
+                    <button type="button" class="btn wrd-button-1" v-on:click="confirmBan">Confirm</button>
+                    <button type="button" class="btn wrd-button-1" v-on:click="cancelBan">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col p-0 ps-2" v-if="info.show==2">
+              <div class="wrd-player-list wrd-border disable-select wrd-scroll">
+                <div class="wrd-empty" v-if="!info.bannedList.length">No data</div>
+                <div class="d-flex pe-2 wrd-border-bottom" v-if="info.bannedList.length" v-for="(item, index) in info.bannedList" :key="item.id">
+                  <div class="wrd-index ms-1">{{ index + 1 }}</div>
+                  <img class="wrd-flag ms-2" :src="'https://flagpedia.net/data/flags/h24/' + item.country.toLowerCase() + '.png'" 
+                      data-bs-toggle="tooltip" data-bs-placement="top" :title="fetchTooltip(item)" v-if="item.country">
+                  <div class="wrd-text ms-2 me-auto" :title="fetchBanReason(item)">{{item.name}}</div>
+                  <div class="wrd-text ms-1">{{ item.time | formatter }}</div>
+                  <div class="wrd-text ms-2" style="width:100px;text-align: left;">ID: {{item.id}}</div>
+                  <div class="wrd-button-3 px-2 ms-2" v-on:click="unban(item)">Unban</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row mt-2 mb-1">
+            <div class="col text-center">
+              <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="btnradio" id="btnPlayerList1" autocomplete="off" value="1" v-model="info.show">
+                <label class="btn wrd-button-2" for="btnPlayerList1">Player list [{{info.playerList.length}}]</label>
+                <input type="radio" class="btn-check" name="btnradio" id="btnPlayerList2" autocomplete="off" value="2" v-model="info.show" v-if="info.mode == 1">
+                <label class="btn wrd-button-2" for="btnPlayerList2" v-if="info.mode == 1">Banned list [{{info.bannedList.length}}]</label>
+              </div>
+              <img src="/assets/img/refresh.png" class="wrd-refresh" v-on:click="refresh">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col wrd-text p-2">
+          <div class="input-group">
+            <input type="text" v-model="info.manualCommand" class="form-control form-control-sm wrd-form border-0 text-center" placeholder="You can type command here" v-on:keyup.enter="sendManualCommand">
+            <span class="input-group-btn">
+              <button class="btn wrd-button-1" v-on:click="sendManualCommand">SEND</button>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="row" v-if="info.mode == 1">
+        <div class="col" style="position:relative;">
+          <div style="position: absolute; top: 6px; right: 26px; text-align:center;">
+            <div class="btn-group" role="group">
+              <input type="radio" class="btn-check" name="btnradio" id="btnLogs1" autocomplete="off" value="1" v-model="info.showLogs">
+              <label class="btn wrd-button-2" for="btnLogs1">Logs</label>
+              <input type="radio" class="btn-check" name="btnradio" id="btnLogs2" autocomplete="off" value="2" v-model="info.showLogs">
+              <label class="btn wrd-button-2" for="btnLogs2">Messages</label>
+            </div>
+          </div>
+          <div class="wrd-border wrd-text-2 wrd-scroll wrd-select-allowed p-2" style="height:190px;overflow-y:scroll;">
+            <div v-for="(line, index) in info.logs" v-if="info.showLogs==1">
+              {{line}}
+            </div>
+            <div v-for="(item, index) in info.messages" v-if="info.showLogs==2">
+              [{{moment(item.time).format("YYYY-MM-DD HH:mm:ss")}}] [{{item.id}}] {{item.name}}: {{item.message}}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="position: absolute;top: 0; left: 0;width:100%;height:100%" v-if="info.import">
+        <div class="wrd-modal-container" style="justify-content: center;align-items: center;">
+          <div class="wrd-modal-mask"></div>
+          <div class="wrd-modal-body" style="width:60vw; height: 40vh; flex: none;padding:10px;background:#487157">
+            <textarea style="resize:none;width:100%;height:100%;" v-model="info.presets"></textarea>
+          </div>
+          <div class="wrd-modal-button-group ms-2 mb-1 me-2 pt-1 pb-2 pe-2" style="width:60vw;background: #487157">
+            <button type="button" class="btn wrd-button-1" v-on:click="importPresets">Confirm</button>
+            <button type="button" class="btn wrd-button-1" v-on:click="cancelImport">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="wrd-author">Made by Eric, Version: 2.0.0</div>
+  <script type="text/javascript" src="/assets/js/countries.js?v=20220207"></script>
+  <script type="text/javascript" src="/assets/js/index.js?v=20220207"></script>
+</body>
+
+</html>
