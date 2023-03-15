@@ -1418,6 +1418,8 @@ const init = async function() {
   
   global.init.done = true;
 
+  global.bannedList = await fetchBannedList();
+  
   let list = await fetchServerInfo();
 
   for(let key in list) {
