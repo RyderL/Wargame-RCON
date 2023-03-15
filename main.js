@@ -67,7 +67,7 @@ app.get('/ban', function(req, res){
 app.post('/ban', async function(req, res) {
   let body = req.body;
 
-  if(!(body.uid && body.host &&  (body.banned && body.reason))) {
+  if(!(body.uid && body.host && ((body.banned && body.reason) || !body.banned))) {
     res.send({code: -1, message: "Parameter error"});
     return;
   }
@@ -78,6 +78,8 @@ app.post('/ban', async function(req, res) {
 
   await saveBannedInfo({host: body.host, id: body.uid, time: body.time, reason: body.reason, banned: body.banned});
 
+  commandHandler({host: body.host, cmd: `kick ${req.uid}`});
+  
   res.send({code: 0, message: "ok"});
 });
 
@@ -785,22 +787,33 @@ const saveBannedInfo = async function(params) {
     let old = data.splice(idx, 1);
     reason = old[0].reason || reason;
   }
+  
+  let time = parseInt(info.time);
+
+  if(isNaN(time)) {
+    time = 0;
+  } else {
+    time *= 3600000;
+  }
+ 
+  let now = Date.now();
 
   if(params.banned) {
-    info.time = params.time;
+    info.time = now + time;
     info.host = params.host;
     info.reason = reason;
     data.push(info);
   }
   
-  let now = Date.now();
-  let gap = params.time - now;
-  
+  io.sockets.emit("test", {now, time, data})
+
   // Remove players whose ban time has expired
   data.filter(x => x.time > 0 && x.time - now <= 0).forEach(x => data.splice(data.indexOf(x), 1));
 
   await save("banned", data);
   
+  let gap = time - now;
+
   if(params.banned && gap > 0 && gap < 2147483647 && !global.timer['ban_' + params.id]) {
     global.timer['ban_' + params.id] = setTimeout(() => {
       saveBannedInfo({id: params.id, banned: false});
@@ -815,7 +828,7 @@ const saveBannedInfo = async function(params) {
 
   global.bannedList = data;
 
-  socket.emit("update-banned-list", {data})
+  io.sockets.emit("update-banned-list", {data})
 }
 
 const saveServerVariable = async function(params) {
