@@ -6,6 +6,8 @@ Web-based wargame red dragon rcon tool
 
 [Online Preview](http://wrd.endless.ws/)
 
+<i>recommended to use the 127.0.0.1 loopback address to connect to the server</i>
+
 #### Screenshot
 
 <div align="center">
