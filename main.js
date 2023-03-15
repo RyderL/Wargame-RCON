@@ -53,11 +53,11 @@ app.get('/', function (req, res) {
 });
 
 app.get('/:id', async function(req, res){
-  if(!id) {
+  if(!req.params.id) {
     return;
   }
 
-  res.send(await fetchPlayerInfo({id}));
+  res.send(await fetchPlayerInfo({id: req.params.id}));
 });
 
 app.get('/ban', function(req, res){
