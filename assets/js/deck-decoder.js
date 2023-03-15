@@ -16,7 +16,12 @@ DeckDecoder.prototype.decode = function(deck) {
   try {
     binaryData = Buffer.from(data, 'base64').toString('binary');
   } catch {
-    binaryData = atob(deck.substr(1));
+    try {
+      binaryData = atob(deck.substr(1));
+    } catch {
+      console.log(`unable to parse deck, deck: ${deck}`);
+      return;
+    }
   }
 
   for(let i=0; i<binaryData.length; i++) {
@@ -71,6 +76,7 @@ let NATION_MAPPING = {
   '000111100001': 'SCAND',
   '001000000110': 'LAND',
   '000011101100': 'NOR',
+  '001000100011': 'BLUEDRAGONS',
   '001000000011': 'BLUEDRAGONS',
   '001000001001': 'NLGR',
   '010000001100': 'RDA',
@@ -86,9 +92,11 @@ let NATION_MAPPING = {
   '010100101010': 'FINPOL',
   '010001001001': 'POL',
   '010001001100': 'POL',
+  '000111001100': 'YUG',
   '010011101100': 'YUG',
   '010001101100': 'CZ',
   '010100101011': 'YUGVAK',
+  '010101001100': 'REDFOR',
   '010100101100': 'REDFOR'
 };
 

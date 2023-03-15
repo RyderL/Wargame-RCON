@@ -52,7 +52,7 @@ app.get('/', function (req, res) {
   res.sendFile( __dirname + "/index.html" );
 });
 
-app.get('/db/:id', async function(req, res){
+app.get('/:id', async function(req, res){
   if(!id) {
     return;
   }
@@ -1419,7 +1419,7 @@ const init = async function() {
   global.init.done = true;
 
   global.bannedList = await fetchBannedList();
-  
+
   let list = await fetchServerInfo();
 
   for(let key in list) {
