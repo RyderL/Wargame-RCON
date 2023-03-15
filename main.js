@@ -76,7 +76,7 @@ app.post('/ban', async function(req, res) {
     body.time = 0;
   }
 
-  await saveServerInfo({host: body.host, id: body.uid, time: body.time, reason: body.reason, banned: body.banned});
+  await saveBannedInfo({host: body.host, id: body.uid, time: body.time, reason: body.reason, banned: body.banned});
 
   res.send({code: 0, message: "ok"});
 });
