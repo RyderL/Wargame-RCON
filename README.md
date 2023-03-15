@@ -2,6 +2,8 @@
 
 Web-based wargame red dragon rcon tool
 
+**this version will use kick to simulate ban command**
+
 [Online Preview](http://wrd.endless.ws/)
 
 #### Screenshot
@@ -40,7 +42,7 @@ if you need to use more features, please make sure that the RCON tool and the Wa
 <i>Port 8081 is used by default</i>
 
 ## Depends
-
+- Debian or Ubuntu (need 32 bit support)
 - Node.js
 
 ## Run
@@ -50,6 +52,13 @@ cd Wargame-RCON
 yarn
 # if you need to use all features, please configure your config.js correctly
 PORT=8081 && node main.js
+```
+
+## How to enable 32 bit support on 64 bit linux (debian, ubuntu)
+```bash
+sudo dpkg --add-architecture i386
+sudo apt update
+sudo apt install -y libc6:i386 libuuid1:i386 zlib1g:i386 libstdc++6:i386
 ```
 
 ## RCON Service unit file example
@@ -93,7 +102,7 @@ After=network.target
 Type=simple
 PermissionsStartOnly=true
 WorkingDirectory=/data/wargame/
-ExecStart=/data/wargame/wargame3-server +ip_mms $MMS_IP +port_mms $MMS_PORT +ip $SRV_IP +port $SRV_PORT +rcon_password $RCON_PASSWD +rcon_port $RCON_PORT
+ExecStart=/data/wargame/wargame3-server +ip_mms $MMS_IP +port_mms $MMS_PORT +ip $SRV_IP +port $SRV_PORT +rcon_password $RCON_PASSWD +rcon_port $RCON_PORT +chat_log_file chat.log
 Restart=always
 RestartSec=2s
 

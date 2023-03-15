@@ -13,7 +13,7 @@
   <script src="/assets/js/moment.min.js"></script>
   <script src="/assets/js/deck-decoder.js"></script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="https://unpkg.com/vue-toasted"></script>
+  <script src="https://unpkg.com/vue-toasted@1.1.28/dist/vue-toasted.min.js"></script>
 </head>
 
 <body>
@@ -482,7 +482,7 @@
                     </button>
 
                     <ul class="dropdown-menu p-0 wrd-scroll" style="overflow-y: scroll;">
-                      <li v-for="(item, index) in mapping.nationCode.blue" v-bind:value="index" v-on:click="updateRestrictNation('blue', item)">
+                      <li v-for="(item, index) in (current.settings.GameType * 1 == 2 ? mapping.nationCode.red : mapping.nationCode.blue)" v-bind:value="index" v-on:click="updateRestrictNation('blue', item)">
                         <div class="dropdown-item d-flex border border-dark border-top-0">
                           <img :src="'/assets/img/' + item + '.png'" class="img-fluid wrd-icon-3 ms-1">
                         </div>
@@ -499,7 +499,7 @@
                     </button>
 
                     <ul class="dropdown-menu p-0 wrd-scroll" style="overflow-y: scroll;">
-                      <li v-for="(item, index) in mapping.nationCode.red" v-bind:value="index" v-on:click="updateRestrictNation('red', item)">
+                      <li v-for="(item, index) in (current.settings.GameType * 1 == 1 ? mapping.nationCode.blue : mapping.nationCode.red)" v-bind:value="index" v-on:click="updateRestrictNation('red', item)">
                         <div class="dropdown-item d-flex border border-dark border-top-0">
                           <img :src="'/assets/img/' + item + '.png'" class="img-fluid wrd-icon-3 ms-1">
                         </div>
@@ -762,16 +762,19 @@
                 <div class="wrd-empty" v-if="!info.playerList.length">No data</div>
                 <div class="d-flex wrd-border-bottom" v-if="info.playerList.length" v-for="(item, index) in info.playerList" :key="item.id">
                   <div :class="'wrd-player-status wrd-text ms-1 wrd-player-status-' + item.status.toLowerCase() " :title="item.status" v-if="info.mode == 1">{{ item.status.substr(0, 1) }}</div>
-                  <img class="img-fluid wrd-map-icon ms-1" :src="'/assets/img/gametype_' + (item.alliance * 1 + 1) + '.png'" v-if="info.mode == 1 && item.deckData">
+                  <img class="img-fluid wrd-map-icon ms-1" :src="'/assets/img/gametype_' + (item.alliance * 1 + 1) + '.png'" v-if="item.deckData">
                   <div class="wrd-index ms-1">{{ index + 1 }}</div>
-                  <img class="wrd-flag ms-2" :src="'https://flagpedia.net/data/flags/h24/' + item.country.toLowerCase() + '.png'"  data-bs-toggle="tooltip" data-bs-placement="top" :title="fetchTooltip(item)" v-if="info.mode == 1 && item.country">
+                  <img class="wrd-flag ms-2" :src="'https://flagpedia.net/data/flags/h24/' + item.country.toLowerCase() + '.png'" data-bs-toggle="tooltip" data-bs-placement="top" :title="fetchTooltip(item)" v-if="item.country">
+                  <a :href="item.steam.profile" target="_blank" v-if="item.steam && item.steam.avatar">
+                    <img :src="item.steam.avatar" style="width:20px;height:20px;margin:2px 4px;">
+                  </a>
                   <div class="me-auto ms-1 wrd-text" style="flex:1" :title="'IP: ' + item.ip" v-on:dblclick="changeName(item)" v-if="!item.changeName">{{item.name}}</div>
                   <input type="text" class="wrd-inline-input" v-model="item.name" @blur="confirmChangeName(item)" v-on:keyup.enter="confirmChangeName(item)" :ref="`name_${item.id}`" v-if="item.changeName" />
-                  <img class="img-fluid wrd-type-icon ms-1" :src="'/assets/img/era_' + (item.deckData.era ^ 1) + '.png'" v-if="info.mode == 1 && item.deckData && item.deckData.era != 2">
-                  <img class="img-fluid wrd-type-icon ms-1" :src="'/assets/img/thematic_' + item.deckData.spec + '.png'" v-if="info.mode == 1 && item.deckData && item.deckData.spec != 7">
-                  <img class="img-fluid wrd-nation-icon ms-1" :src="'/assets/img/' + item.deckData.nation + '.png'" v-if="info.mode == 1 && item.deckData">
+                  <img class="img-fluid wrd-type-icon ms-1" :src="'/assets/img/era_' + (item.deckData.era ^ 1) + '.png'" v-if="item.deckData && item.deckData.era != 2">
+                  <img class="img-fluid wrd-type-icon ms-1" :src="'/assets/img/thematic_' + item.deckData.spec + '.png'" v-if="item.deckData && item.deckData.spec != 7">
+                  <img class="img-fluid wrd-nation-icon ms-1" :src="'/assets/img/' + item.deckData.nation + '.png'" v-if="item.deckData">
                   <div class="wrd-text ms-2" style="width:100px;text-align: left;">ID: {{item.id}}</div>
-                  <div class="wrd-text ms-2" style="width:50px;text-align: left;" v-if="info.mode == 1 && item.level">LV: {{item.level}}</div>
+                  <div class="wrd-text ms-2" style="width:50px;text-align: left;" v-if="item.level">Lv: {{item.level}}</div>
                   <div class="wrd-team" v-on:click="alliance(item,0)"><i class="wrd-team-blue me-1 ms-1"></i></div>
                   <div class="wrd-team" v-on:click="alliance(item,1)"><i class="wrd-team-red me-1"></i></div>
                   <div class="wrd-button-3 px-2 border border-dark " v-on:click="deck(item)">Deck</div>
@@ -895,9 +898,9 @@
       </div>
     </div>
   </div>
-  <div class="wrd-author">Made by Eric, Version: 2.0.0</div>
-  <script type="text/javascript" src="/assets/js/countries.js?v=20220207"></script>
-  <script type="text/javascript" src="/assets/js/index.js?v=20220207"></script>
+  <div class="wrd-author">Made by Eric, Version: 2.1.0</div>
+  <script type="text/javascript" src="/assets/js/countries.js?v=20230101"></script>
+  <script type="text/javascript" src="/assets/js/index.js?v=20230101"></script>
 </body>
 
 </html>

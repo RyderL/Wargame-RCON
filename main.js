@@ -13,9 +13,9 @@ const levelup = require('levelup');
 const leveldown = require('leveldown');
 const Tail = require('tail').Tail;
 const io = require('socket.io')(http);
+const axios = require('axios').default;
 
 const config = require('./config');
-const hostConfig = config.hosts;
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -24,11 +24,13 @@ const port = process.env.PORT || 8081;
 
 const Rcon = require('./rcon');
 const DeckDecoder = require('./assets/js/deck-decoder');
-const { info } = require('console');
+const { join } = require('path');
 
 const db = levelup(leveldown('./db'))
 
 app.use('/assets', express.static('assets'));
+
+const HOST_CHECK_REGEXP = /^(\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5]):([0-9]|[1-9]\d|[1-9]\d{2}|[1-9]\d{3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/;
  
 global.mapping = {lastIndex: 0};
 global.cache = {};
@@ -48,6 +50,35 @@ const DEFAULT_PLAYER_INFO = {id: null, name: '', deck: '', deckName: '', elo: 15
 
 app.get('/', function (req, res) {
   res.sendFile( __dirname + "/index.html" );
+});
+
+app.get('/db/:id', async function(req, res){
+  if(!id) {
+    return;
+  }
+
+  res.send(await fetchPlayerInfo({id}));
+});
+
+app.get('/ban', function(req, res){
+  res.send(global.bannedList);
+});
+
+app.post('/ban', async function(req, res) {
+  let body = req.body;
+
+  if(!(body.uid && body.host &&  (body.banned && body.reason))) {
+    res.send({code: -1, message: "Parameter error"});
+    return;
+  }
+
+  if(body.time == undefined || body.time == null || body.time < 0) {
+    body.time = 0;
+  }
+
+  await saveServerInfo({host: body.host, id: body.uid, time: body.time, reason: body.reason, banned: body.banned});
+
+  res.send({code: 0, message: "ok"});
 });
 
 io.on('connection', (socket) => {
@@ -131,9 +162,10 @@ io.on('connection', (socket) => {
   
     if(cmd == 'unban' || cmd == 'kick') {
       commandHandler({host: host, cmd: `${cmd} ${req.uid}`});
-      saveBannedInfo({host: host, id: req.uid, banned: false});
+      saveBannedInfo({id: req.uid, banned: false});
     } else if(cmd == 'ban') {
-      commandHandler({host: host, cmd: `${cmd} ${req.uid} ${req.value}`});
+      // Deprecate
+      // commandHandler({host: host, cmd: `${cmd} ${req.uid} ${req.value}`});
     } else if(cmd == 'alliance') {
       commandHandler({host: host, cmd: `setpvar ${req.uid} PlayerAlliance ${req.value}`});
     } else if(cmd == 'deck') {
@@ -171,29 +203,19 @@ io.on('connection', (socket) => {
     fetchRemotePlayerList(req.host);
   });
 
-  socket.on('request-player-info', async (id) => {
-    if(!id) {
-      return;
-    }
-
-    socket.emit('response-player-info', await fetchPlayerInfo({id}));
-  });
-
   socket.on('request-ban-player', async (req) => {
     if(!verifyRequest(req)) {
       return;
     }
 
-    await saveBannedInfo({host: req.host, id: req.uid, time: req.time, reason: req.reason, banned: true});
-    commandHandler({host: req.host, cmd: `ban ${req.uid} ${req.time}`});
+    await saveBannedInfo({id: req.uid, time: req.time, reason: req.reason, banned: true, host: req.host});
+    commandHandler({host: req.host, cmd: `kick ${req.uid}`});
   });
 
   socket.on('request-change-player-name', async (req) => {
     if(!verifyRequest(req)) {
       return;
     }
-
-    await savePlayerInfo(req.host, {id: req.uid, name: req.name, flag: 1});
 
     commandHandler({host: req.host, cmd: `setpvar ${req.uid} PlayerName ${req.name}`});
   });
@@ -215,14 +237,7 @@ io.on('connection', (socket) => {
       return;
     }
 
-    let data = null;
-
-    try {
-      data = await db.get('replacement');
-      data = JSON.parse(data);
-    } catch {
-      data = {source: [], target: []};
-    }
+    let data = await fetchReplacement();
 
     global.replacement = data;
 
@@ -307,6 +322,12 @@ const hasConnected = function(host) {
 const loginHandler = async function(data) {
   let host = data.host.trim();
 
+  if(!HOST_CHECK_REGEXP.exec(host)) {
+    return;
+  }
+
+  logger.info(`Host: ${host}, Pwd: ${data.password}, connecting...`);
+
   if(!global.mapping[host]) {
     global.mapping.lastIndex = global.mapping.lastIndex + 1;
     global.mapping[host] = global.mapping.lastIndex;
@@ -380,7 +401,7 @@ const errorHandler = function(res) {
       return;
     }
     
-    logger.info("Host: " + host +", Pwd: " + password + ", Reconnecting...");
+    logger.info("Host: " + host +", Reconnecting...");
 
     setTimeout(() => {
       global.retry[host] = (global.retry[host] || 0) + 1;
@@ -426,9 +447,9 @@ const responseHandler = async function(res) {
 
     if(global.init[host]) {
       // reload banned list
-      let items = await fetchBannedList(host);
-      global.cache[host].bannedList = items;
-      io.to(host).emit("update-banned-list", {host, items})
+      let data = await fetchBannedList(host);
+      global.cache[host].bannedList = data;
+      io.to(host).emit("update-banned-list", {host, data})
 
     } else {
       if(global.timer[host]) {
@@ -701,6 +722,16 @@ const saveMOTD = async function(id, host, value) {
   await save(host + "-MOTD", {value});
 }
 
+const setPlayerDeck = async function(host, uid, deck) {
+  let check = new DeckDecoder(deck);
+
+  if(check.side == 'NONE') {
+    return;
+  }
+
+  global.cache[host].rcon.send(`setpvar ${uid} PlayerDeckContent ${deck}`);
+}
+
 const savePlayerInfo = async function(host, params) {
   let info = null;
   
@@ -726,7 +757,6 @@ const savePlayerInfo = async function(host, params) {
 }
 
 const saveBannedInfo = async function(params) {
-  let host = params.host;
   let info = null;
   
   try {
@@ -736,53 +766,56 @@ const saveBannedInfo = async function(params) {
     info = {id: params.id, name: "Unknown", level: 1};
   }
 
-  logger.info("Host: " + params.host + ", Player " + info.id + ":" + info.name + " has been " + (params.banned ? "banned" : "unban"));
+  logger.info("Player " + info.id + ":" + info.name + " has been " + (params.banned ? "banned" : "unban"));
 
-  let bannedList = null;
+  let data = null;
 
   try {
-    bannedList = await db.get(params.host + "-banned");
-    bannedList = JSON.parse(bannedList);;
+    data = await db.get("banned");
+    data = JSON.parse(data);;
   } catch {
-    bannedList = [];
+    data = [];
   }
   
-  let idx = bannedList.findIndex((item) => item.id == params.id);
+  let idx = data.findIndex((item) => item.id == params.id);
 
   let reason = params.reason || '';
 
   if(idx > -1) {
-    let old = bannedList.splice(idx, 1);
+    let old = data.splice(idx, 1);
     reason = old[0].reason || reason;
   }
 
   if(params.banned) {
     info.time = params.time;
+    info.host = params.host;
     info.reason = reason;
-    bannedList.push(info);
+    data.push(info);
   }
+  
+  let now = Date.now();
+  let gap = params.time - now;
+  
+  // Remove players whose ban time has expired
+  data.filter(x => x.time > 0 && x.time - now <= 0).forEach(x => data.splice(data.indexOf(x), 1));
 
-  await save(params.host + "-banned", bannedList);
+  await save("banned", data);
   
-  let gap = params.time - Date.now();
-  
-  if(params.banned && gap > 0 && gap < 2147483647 && !global.timer[host + '_ban_' + params.id]) {
-    global.timer[host + '_ban_' + params.id] = setTimeout(() => {
-      saveBannedInfo({host: host, id: params.id, banned: false});
+  if(params.banned && gap > 0 && gap < 2147483647 && !global.timer['ban_' + params.id]) {
+    global.timer['ban_' + params.id] = setTimeout(() => {
+      saveBannedInfo({id: params.id, banned: false});
     }, gap);
-  } else if(!params.banned && global.timer[host + '_ban_' + params.id]) {
-    clearTimeout(global.timer[host + '_ban_' + params.id]);
+  } else if(!params.banned && global.timer['ban_' + params.id]) {
+    clearTimeout(global.timer['ban_' + params.id]);
   }
 
   if(params.init) {
     return;
   }
 
-  if(global.cache[host]) {
-    global.cache[host].bannedList = bannedList;
-  }
+  global.bannedList = data;
 
-  io.to(host).emit("update-banned-list", {host, bannedList})
+  socket.emit("update-banned-list", {data})
 }
 
 const saveServerVariable = async function(params) {
@@ -791,7 +824,7 @@ const saveServerVariable = async function(params) {
   }
 
   let info = null;
-  
+
   try {
     info = await db.get(params.host + "-variable");
     info = JSON.parse(info);
@@ -799,16 +832,16 @@ const saveServerVariable = async function(params) {
     info = {};
   }
 
+  let prev = Object.assign({}, info);
+
   info[params.key] = params.value;
 
   global.cache[params.host].variable = info;
 
-  if(global.cache[params.host].last && global.cache[params.host].last.key == params.key && global.cache[params.host].last.value == params.value) {
+  if(prev[params.key] == info[params.key]) {
     return;
   }
   
-  global.cache[params.host].last = params;
-
   io.to(params.host).emit("update-variable", params);
 
   await save(params.host + "-variable", info);
@@ -911,6 +944,15 @@ const fetchData = async function(host, suffix, defaultValue) {
   return info;
 }
 
+const fetchReplacement = async function() {
+  try {
+    let data = await db.get('replacement');
+    return JSON.parse(data);
+  } catch {
+    return {source: [], target: []};
+  }
+}
+
 const fetchServerVariable = async function(host) {
   return await fetchData(host, "variable", {});
 }
@@ -923,15 +965,23 @@ const fetchPlayerList = async function(host) {
   return await fetchData(host, "player", []);
 }
 
-const fetchBannedList = async function(host) {
-  let list = await fetchData(host, "banned", []);
+const fetchBannedList = async function() {
+  let list = null;
+
+  try {
+    list = await db.get("banned");
+    list = JSON.parse(list);;
+  } catch {
+    list = [];
+  }
+
   let now = Date.now();
   
   let result = [];
 
   for(let item of list) {
     if(item.time && item.time <= now) {
-      await saveBannedInfo({id: item.id, banned: false, host: host});
+      await saveBannedInfo({id: item.id, banned: false});
     } else {
       result.push(item);
     }
@@ -940,12 +990,30 @@ const fetchBannedList = async function(host) {
   return result;
 }
 
+const checkBannedList = async function(host, player) {
+  let info = global.bannedList.filter(item => item.id == player.id);
+
+  if(!(info && info.length)) {
+    // pass
+    return;
+  }
+
+  if(info.time > 0 && info.time - Date.now() <= 0) {
+    // unban and pass
+    saveBannedInfo({id: player.id, banned: false});
+    return;
+  }
+
+  // Using kick to simulate ban can avoid the problem of unban failure
+  global.cache[host].rcon.send(`kick ${player.id}`);
+}
+
 const replace = async function(host, params) {
   for(let item of replacement.source) {
     if(params.name.toLowerCase().indexOf(item) > -1) {
       let newName = replacement.target[Math.floor(Math.random() * replacement.target.length)]
       setTimeout(() => { 
-        await savePlayerInfo(req.host, {id: params.id, name: newName, flag: 1});
+        savePlayerInfo(host, {id: params.id, name: newName});
         global.cache[host].rcon.send(`setpvar ${params.id} PlayerName ${newName}`); 
       }, 300);
       setTimeout(() => { broadcastPlayerList(host); }, 1000);
@@ -960,7 +1028,7 @@ const onPlayerConnect = async function(host, params) {
   
   let geo = geoip.lookup(ip);
   
-  let player = {id: id, ip: ip, status: 'Waiting', alliance: 0};
+  let player = {id: id, ip: ip, status: 'Waiting', alliance: 0, connected: false};
 
   if(geo) {
     player.country = geo.country;
@@ -969,6 +1037,8 @@ const onPlayerConnect = async function(host, params) {
   }
   
   await savePlayerInfo(host, player);
+
+  checkBannedList(host, player);
 }
 
 const onPlayerDisconnect = async function(host, params) {
@@ -1008,24 +1078,23 @@ const onSetPlayerDeck = async function(host, params) {
   
       str = restrict[alliance];
   
-      let type = DECK_TYPE_MAPPING[restrict.deck].toLowerCase();
-  
-      //chat(host, `${type} deck is not allowed on this server.`);
-  
-      global.cache[host].rcon.send(`setpvar ${params[1]} PlayerDeckContent ${str}`);
+      if(str && str.trim().length){
+        global.cache[host].rcon.send(`setpvar ${params[1]} PlayerDeckContent ${str}`);
+      }
     }
 
     if(restrict.nation[alliance].type != defaultType && restrict.nation[alliance].deck.trim().length > 0 && deck.nation != restrict.nation[alliance].type) {
       str = restrict.nation[alliance].deck;
 
-      global.cache[host].rcon.send(`setpvar ${params[1]} PlayerDeckContent ${str}`);
+      if(str && str.trim().length){
+        global.cache[host].rcon.send(`setpvar ${params[1]} PlayerDeckContent ${str}`);
+      }
     }
-    
   }
 
   //saveHostPlayers(host, params[1], true, null, params[2]);
 
-  await savePlayerInfo(host, {id: params[1], deck: str});
+  await savePlayerInfo(host, {id: params[1], deck: str, connected: true});
   
   //fetchRemotePlayerList(host);
   broadcastPlayerList(host);
@@ -1037,7 +1106,11 @@ const onSetPlayerDeckName = async function(host, params) {
 }
 
 const onSetPlayerLevel = async function(host, params) {
-  //let player = await savePlayerInfo(host, {id: params[1], level: params[2]});
+  let player = await savePlayerInfo(host, {id: params[1], level: params[2]});
+
+  if(!global.cache[host]) {
+    return;
+  }
 
   let restrict = global.cache[host].restrict;
   let level = params[2];
@@ -1067,6 +1140,37 @@ const onSetPlayerElo = async function(host, params) {
 const onSetPlayerAlliance = async function(host, params) {
   saveHostPlayers(host, params[1], true, params[2]);
   await savePlayerInfo(host, {id: params[1], alliance: params[2]});
+}
+
+const onSetPlayerAvatar = async function(host, params) {
+  let player = await fetchPlayerInfo({id: params[1]});
+
+  if(!config.steamApiKey || !config.steamApiKey.length) {
+    return;
+  }
+
+  if((player.steam && player.steam.next < Date.now()) || params[2].length < 42) {
+    return;
+  }
+
+  try {
+    let array = params[2].split('/');
+    
+    if(array.length != 3) {
+      return;
+    }
+
+    const res = await axios.get(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${config.steamApiKey}&steamids=${array[2]}`);
+
+    if(!(res.data && res.data.response && res.data.response.players && res.data.response.players.length > 0)) {
+      return;
+    }
+
+    let item = res.data.response.players[0];
+    let steam = {name: item.personaname, avatar: item.avatar, profile: item.profileurl, country: item.loccountrycode, next: Date.now() + 86400000};
+
+    await savePlayerInfo(host, {id: player.id, steam: steam});
+  } catch (error) {}
 }
 
 const onSetPlayerName = async function(host, params) {
@@ -1120,7 +1224,7 @@ const onPlayerBanned = async function(host, params) {
 }
 
 const onPlayerUnban = async function(host, params) {
-  await saveBannedInfo({id: params[1], banned: false, host: host});
+  await saveBannedInfo({id: params[1], banned: false});
 }
 
 const onLaunch = async function(host) {
@@ -1133,15 +1237,15 @@ const onLaunch = async function(host) {
 
   global.motd[host] = setTimeout(() => { broadcastMOTD(host); }, 2000);
   
-  for(let id of [].concat(global.cache[host].players[0], global.cache[host].players[1])) {
-    let player = await fetchPlayerInfo({id});
-
-    player.name && player.flag && commandHandler({host: host, cmd: `setpvar ${player.id} PlayerName ${player.name}`});
-
-    delete player.flag;
-
-    await save(player.id, player);
-  }
+  setTimeout(async () => {
+    for(let id of [].concat(global.cache[host].players[0], global.cache[host].players[1])) {
+      let player = await fetchPlayerInfo({id});
+  
+      if(!player.connected) {
+        commandHandler({host: host, cmd: `kick ${player.id}`});
+      }
+    }
+  }, 1000);
   
 }
 
@@ -1222,7 +1326,6 @@ const onGameDebriefing = async function(host, params) {
 }
 
 const onSetServerVariables = async function(host, params) {
-  
   let key = params[1];
   let value = params[2];
 
@@ -1252,6 +1355,7 @@ const events = [
   {regex: /Client ([0-9]+) variable PlayerLevel set to "(.*)"/, handler: onSetPlayerLevel},
   {regex: /Client ([0-9]+) variable PlayerElo set to "(.*)"/, handler: onSetPlayerElo},
   {regex: /Client ([0-9]+) variable PlayerAlliance set to "([0-9])"/, handler: onSetPlayerAlliance},
+  {regex: /Client ([0-9]+) variable PlayerAvatar set to "(.*)"/, handler: onSetPlayerAvatar},
   {regex: /Client ([0-9]+) variable PlayerName set to "(.*)"/, handler: onSetPlayerName},
   {regex: /Client ([0-9]+) variable PlayerReady set to "0"/, handler: onPlayerReady},
   {regex: /Client ([0-9]+) set request state to ([0-9]+)/, handler: onChangePlayerStatus},
@@ -1269,31 +1373,13 @@ const events = [
 ];
 
 const eventHandler = async function(host, data) {
-  for(let idx in events) {
-    let event = events[idx];
+  for(let event of events) {
     let m = event.regex.exec(data);
 
     if(m && m.length >= 1) {
       await log('log', host, data);
       await event.handler.apply(this, [host, m]);
       return;
-    }
-  }
-}
-
-const loadBannedList = async function(host, dir) {
-  const stream = fs.createReadStream(dir + '/banned_clients.ini');
-  
-  const readLine = readline.createInterface({
-    input: stream,
-    crlfDelay: Infinity
-  });
-  
-  for await (const line of readLine) {
-    let m = /^(\d+)=(\d+)$/g.exec(line);
-
-    if(m && m.length == 3) {
-      await saveBannedInfo({id: m[1], time: m[2] ? m[2] * 1000 : 0, banned: true, host: host, init: true});
     }
   }
 }
@@ -1312,17 +1398,15 @@ const loadLog = async function(host, dir) {
 }
 
 const init = async function() {
-  for(let key in hostConfig) {
+  for(let key in config.hosts) {
     if(!global.log[key]) {
       global.log[key] = [];
       global.message[key] = [];
     }
 
     //console.log("process log...");
-    //await loadLog(key, hostConfig[key]);
+    //await loadLog(key, config.hosts[key]);
     global.init[key] = true;
-
-    await loadBannedList(key, hostConfig[key]);
 
     await tail('log', key);
     await tail('message', key);
@@ -1347,10 +1431,12 @@ const init = async function() {
     global.cache[key].rotation = await fetchRotationStatus(key);
     global.cache[key].rotationList = await fetchRotationList(key);
   }
+
+  global.replacement = await fetchReplacement();
 }
 
 const tail = async function(type, host) {
-  let filename = hostConfig[host] + (type == "log" ? "/serverlog.txt" : "/chat.log");
+  let filename = `${config.hosts[host]}/${type == "log" ? "serverlog.txt" : "chat.log"}`;
 
   fs.access(filename, fs.constants.F_OK, async (err) => {
     if(!err) {
@@ -1388,6 +1474,10 @@ const queue = function(type, host, line) {
   global.queue[type][host].push(line);
 }
 
+const commands = [
+  {regex: /setdeck\s(@.+)/i, handler: setPlayerDeck}
+];
+
 const log = async function(type, host, line) {
   let data = line;
 
@@ -1406,6 +1496,16 @@ const log = async function(type, host, line) {
       let item = global[type][host][idx];
       if(item.time == data.time && item.message == data.message && item.id == data.id && item.name == data.name) {
         return;
+      }
+    }
+
+    // check if it is a chat command
+    for(let command of commands) {
+      let m = command.regex.exec(data.message);
+  
+      if(m && m.length >= 1) {
+        await command.handler.apply(this, [host, data.id, m[1]]);
+        break;
       }
     }
   }

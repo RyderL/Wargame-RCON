@@ -331,10 +331,10 @@ label,
   color: white;
 }
 
-.dropdown-menu li:nth-child(even) {
+/* .dropdown-menu li:nth-child(even) {
   border-top: 1px solid #666;
   border-bottom: 1px solid #666;
-}
+} */
 
 .wrd-button-1, .wrd-button-2, .wrd-button-3 {
   background-color: #29573A;
@@ -497,7 +497,7 @@ label,
 }
 
 .wrd-refreshing {
-  animation: 0.6s refresh 1;
+  animation: 1s refresh 1;
 }
 
 .wrd-motd-text {

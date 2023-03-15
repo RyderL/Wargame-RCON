@@ -119,9 +119,16 @@ new Vue({
       },
       restrict: [-1, 0, 1, 2, 3, 4, 5],
       time: {
+        "1": "1 Hour",
+        "12": "12 Hour",
         "24": "1 Day",
+        "72": "3 Day",
         "168": "1 Week",
+        "336": "2 Week",
         "720": "1 Month",
+        "1440": "2 Month",
+        "2160": "3 Month",
+        "4320": "6 Month",
         "0": "Permanent"
       }
     },
@@ -216,7 +223,7 @@ new Vue({
     prev: null,
     voiceConfig: null,
     voicePresets: null,
-    sound: new Audio("data:audio/wav;base64,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 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU291bmRib3kuZGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAwNGh0dHA6Ly93d3cuc291bmRib3kuZGUAAAAAAAAAACU=")
+    sound: new Audio("data:audio/wav;base64,//tQxAAAB9yXNXQTAAHDKWo7HtAAIAJcAABgzGN5jY/H/neydsTJ3v//u7vf///4IEEDwAEZZO/EJ3rREeyBCAxu6P8HAQh+D4Pg+H9YP/Ln//w/URUvU0quBmjOADHXH0nQJSQt9iqIorGAvrJGS1YDxgPBRdYwLxNJApxlhfkgCGG4gluim81m3GHGspViAhPuJOIVJ1GRA9RG84QetGur/2rWerOspS0k6jFl0lJUiaaIJaLK1a7//V7fXfOGfxBb6nK+7f2tWgSKWQdsMP/7UsQFgAu1ZVu89oAReJlp/MaK3BAKsY6zCQ5dySoKeZvlKCnSsTR6gjBqiy1rWnY6SSmPs/+iYpk51f8iDuHaixxi+hoL1bbPts/b9dSZr/uj7X1ba+vqXTo0du1N97NVRXnzVjdb08xOTCDKQKpJbngUBq+RjgjqyShodC7Dhzj9H5vg8ABuf2w2p82simzX+gxJiTk0sXb/cZhTTpvQ+QZF5zmZX7QgvJAmKBULFVicFwSe9VtQ4sOwMW8tURqehN9Qmpc9dfAkEW5JT/Kw//tSxAWACzFjV6Y0U1l9rKn8yBZpVlZD1EeKTNVLLbJ0TzsR7snLCCRP1VmBKUP/1lZgALZeNmR/RjuZJ6kG+jF/t64ZjJoQ7HCCXVGuqJOUptr/3ITvb//O/mTrQIHZpf/AyLnJm4lhcAMc1LDyckAzdDgDQhnxFSNHo0jzpZRVNmnlsQWB+pu7VLrTC/ALCKbJt/zMtEIJQf/5kfTdxnEVXX9X+ldNFf1kU4O2dtb6uSjf9U+3btqulNnXyRcIjxIBrbqrq6IYwRbuxssBqCb/+1LEBwAMLWdX9MaAAXeaLXcW0AIRIx/IA7OCZR/VZUOjse7sXtZmLarWggkS4GoHwuN/+odiIiih/+aaAuNb0f/666SCDabJso8LdNNq0aqqZmtd3//60zjMyq169abnVqVQ7V1n3XcPh8LBEGRIIR4IxYHAsWOV9wMk2fHghjUq8hj3k7E9DhOGXy+JKbzFJ/rOA0E0sLzmVvn6QXkDyGR1Io/hegsCRHmPdNA0MTVLX/WpRgUi5qLfzM6QMKQ3/6fKpIsVAAAAHH/AH+v/6v/7UsQFA8OoAPm8AYAgAAA0gAAABPDS3dH///+n//DSj3EX+hZ3//oVTEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV")
   },
   created: function() {
     var presets = localStorage.getItem("presets_v2");
@@ -345,7 +352,6 @@ new Vue({
   },
   methods: {
     toast: function(text) {
-      console.log(text);
       this.$toasted.show(text, this.toastConfig);
     },
     // build the common request header
@@ -406,7 +412,7 @@ new Vue({
 
       this.info.logs = res.logs;
       this.info.messages = res.messages;
-      this.info.playerList = res.playerList;
+      this.info.playerList = res.playerList || [];
       this.info.bannedList = res.bannedList;
       this.info.state = res.state;
       this.info.mode = res.mode;
@@ -437,16 +443,14 @@ new Vue({
       this.info.rotationList = list;
       this.info.connected = true;
       this.savePresets();
-
-      console.log(this.current.restrict);
     },
     onUpdateVariable: function(res) {
       if(!this.verifyRequest(res) || res.id == this.id) {
         return;
       }
 
+      this.info.syncVariable = true;
       this.current.settings[res.key] = res.value;
-      this.info.last = res.key + '_' + res.value;
       this.savePresets();
     },
     onUpdatePlayerList: function(res) {
@@ -460,14 +464,10 @@ new Vue({
         }
       }
 
-      this.info.playerList = res.items;
+      this.info.playerList = res.items || [];
     },
     onUpdateBannedList: function(res) {
-      if(!this.verifyRequest(res)) {
-        return;
-      }
-
-      this.info.bannedList = res.bannedList;
+      this.info.bannedList = res.data;
     },
     onUpdateRotationStatus: function(res) {
       if(!this.verifyRequest(res) || res.id == this.id) {
@@ -729,7 +729,7 @@ new Vue({
           this.current.restrict[key] = '';
         }
       } else if(deck == 2 && str.trim().length > 0) {
-        if((new DeckDecoder(str)).nation == 'NONE') {
+        if((new DeckDecoder(str)).nation != this.current.restrict.nation[key].type) {
           this.current.restrict.nation[key].deck = '';
         }
       } else {
@@ -776,18 +776,29 @@ new Vue({
       this.presets[this.current.name] = this.current;
       this.savePresets();
 
-      if(!key || !this.info.connected || this.info.last == (key + '_' + this.current.settings[key])) {
+      if(!key || !this.info.connected) {
         return;
       }
 
-      if(this.timer.command) {
-        clearTimeout(this.timer.command);
-        this.timer.command = null;
+      if(key == "GameType") {
+        let v = this.current.settings[key] * 1;
+
+        this.current.restrict.nation.blue.type = 'BLUFOR';
+        this.current.restrict.nation.red.type = 'REDFOR';
+
+        if(v == 1) {
+          this.current.restrict.nation.red.type = 'BLUFOR';
+        } else if(v == 2) {
+          this.current.restrict.nation.blue.type = 'REDFOR';
+        }
       }
 
-      this.timer.command = setTimeout(() => {
-        this.setServerVariable(key);
-      }, 300);
+      if(this.info.syncVariable) {
+        this.info.syncVariable = false;
+        return;
+      }
+
+      this.setServerVariable(key);
     },
     updateNumber(variable, value, min, max) {
       let v = (this.current.settings[variable] * 1) + value;
@@ -842,15 +853,7 @@ new Vue({
       this.info.showLevelRestrict = false;
       this.info.show = 1;
       
-      if(this.timer.command) {
-        clearInterval(this.timer.command);
-        this.timer.command = null;
-      }
-
       this.stopCountdown();
-    },
-    showPlayerList(val) {
-      this.info.playerList = val;
     },
     push() {
       this.sendVariable('ServerName', this.current.settings);
@@ -875,9 +878,7 @@ new Vue({
       
       this.toast('All variables has been pushed');
     },
-    setServerVariable(key) {
-      this.timer.command = null;
-      
+    setServerVariable(key) {      
       if(!this.info.connected) {
         return;
       }
