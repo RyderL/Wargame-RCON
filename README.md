@@ -15,26 +15,17 @@ Web-based wargame red dragon rcon tool
 # Features
 
 - Server variables settings
-
 - Player management
-
 - Level restrictions
-
 - Deck restrictions (For example, ban support deck)
-
 - Auto rotate map
-
 - Game countdown
-
 - Server broadcast message
-
 - Sound when the game starts
-
 - Automatically synchronize remote server variables to local
-
 - Login information is saved locally
-
 - Server logs and chat logs
+- Joint ban (WIP)
 
 # Install
 if you need to use more features, please make sure that the RCON tool and the Wargame service are running on the same server and config.js is configured correctly.
