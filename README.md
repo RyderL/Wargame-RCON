@@ -27,7 +27,7 @@ Web-based wargame red dragon rcon tool
 - Automatically synchronize remote server variables to local
 - Login information is saved locally
 - Server logs and chat logs
-- Joint ban (WIP)
+- Joint ban
 
 # Install
 if you need to use more features, please make sure that the RCON tool and the Wargame service are running on the same server and config.js is configured correctly.

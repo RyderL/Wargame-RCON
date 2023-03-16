@@ -1,6 +1,5 @@
 const fs = require('fs');
 const readline = require('readline');
-
 const pino = require("pino");
 
 const logger = pino("./rcon.log");
@@ -48,11 +47,22 @@ const DECK_TYPE_MAPPING = {"0": "Motorised", "1": "Armored", "2": "Support", "3"
 const DEFAULT_RESTRICT_NATION_VALUE = {blue: {type: 'BLUFOR', deck: ''}, red: {type: 'REDFOR', deck: ''}};
 const DEFAULT_PLAYER_INFO = {id: null, name: '', deck: '', deckName: '', elo: 1500, level: 1};
 
+// easiest token verification, i don't want to use JWT :D
+const verifyToken = (req, res, next) => {
+  const token = req.headers['x-token'];
+
+  if(!token && token != config.globalBanToken) {
+    return res.sendStatus(401);
+  }
+
+  next();
+}
+
 app.get('/', function (req, res) {
   res.sendFile( __dirname + "/index.html" );
 });
 
-app.get('/:id', async function(req, res){
+app.get('/player/:id', async function(req, res){
   if(!req.params.id) {
     return;
   }
@@ -64,10 +74,10 @@ app.get('/ban', function(req, res){
   res.send(global.bannedList);
 });
 
-app.post('/ban', async function(req, res) {
+app.post('/ban', verifyToken, async function(req, res) {
   let body = req.body;
 
-  if(!(body.uid && body.host && ((body.banned && body.reason) || !body.banned))) {
+  if(!(body.id && body.host)) {
     res.send({code: -1, message: "Parameter error"});
     return;
   }
@@ -76,9 +86,11 @@ app.post('/ban', async function(req, res) {
     body.time = 0;
   }
 
-  await saveBannedInfo({host: body.host, id: body.uid, time: body.time, reason: body.reason, banned: body.banned});
+  await saveBannedInfo({host: body.host, id: body.id, time: body.time, reason: body.reason, banned: body.banned});
 
-  commandHandler({host: body.host, cmd: `kick ${req.uid}`});
+  if(body.banned) {
+    commandHandler({host: body.host, cmd: `kick ${body.id}`});
+  }
   
   res.send({code: 0, message: "ok"});
 });
@@ -210,8 +222,15 @@ io.on('connection', (socket) => {
       return;
     }
 
-    await saveBannedInfo({id: req.uid, time: req.time, reason: req.reason, banned: true, host: req.host});
+    let params = {id: req.uid, time: req.time, reason: req.reason, banned: true, host: req.host};
+
+    await saveBannedInfo(params);
+
     commandHandler({host: req.host, cmd: `kick ${req.uid}`});
+
+    if(config.globalBan) {
+      axios.post(`${config.globalBanUrl}/ban`, params, {headers: {'Content-Type': 'application/json', 'X-Token': config.globalBanToken}});
+    }
   });
 
   socket.on('request-change-player-name', async (req) => {
@@ -799,17 +818,15 @@ const saveBannedInfo = async function(params) {
   let now = Date.now();
 
   if(params.banned) {
-    info.time = now + time;
+    info.time = time > 0 ? now + time: 0;
     info.host = params.host;
     info.reason = reason;
     data.push(info);
   }
-  
-  io.sockets.emit("test", {now, time, data})
 
   // Remove players whose ban time has expired
   data.filter(x => x.time > 0 && x.time - now <= 0).forEach(x => data.splice(data.indexOf(x), 1));
-
+  
   await save("banned", data);
   
   let gap = time - now;
@@ -1158,7 +1175,7 @@ const onSetPlayerAlliance = async function(host, params) {
 const onSetPlayerAvatar = async function(host, params) {
   let player = await fetchPlayerInfo({id: params[1]});
 
-  if(!config.steamApiKey || !config.steamApiKey.length) {
+  if(!config.steamApiKey || !config.steamApiKey.length || config.steamApiKey == 'YOUR_STEAM_WEB_API_KEY') {
     return;
   }
 
