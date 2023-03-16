@@ -6,6 +6,7 @@ let hosts = {
 
 // To enable joint ban, set globalBan to true (WIP)
 // Please do not enable globalBan on the main server, the globalBanToken of other servers need to be consistent with the main server
+// With globalBan enabled, the server will sync the bannedList from the main server every 5 minutes
 // Currently does not support https protocol
 let globalBan = false;
 let globalBanUrl = "http://wrd.endless.ws";
