@@ -1465,6 +1465,36 @@ const init = async function() {
   }
 
   global.replacement = await fetchReplacement();
+
+  setTimeout(downloadBannedList(), 300000);
+}
+
+const downloadBannedList = async function() {
+  if(config.globalBan) {
+    try {
+      let res = await axios.get(`${config.globalBanUrl}/ban`);
+
+      if(res.data) {
+        let flag = false;
+
+        for(let n of res.data) {
+          if(global.bannedList.find(x => x.id == n.id)) {
+            continue;
+          }
+
+          global.bannedList.push(n);
+          flag = true;
+        }
+
+        if(flag) {
+          await save("banned", global.bannedList);
+        }
+      }
+    } catch {}
+
+    // Synchronize the banned list every 5 minutes
+    setTimeout(downloadBannedList(), 300000);
+  }
 }
 
 const tail = async function(type, host) {
