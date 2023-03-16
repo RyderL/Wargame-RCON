@@ -22,7 +22,7 @@ Web-based wargame red dragon rcon tool
 - Deck restrictions (For example, ban support deck)
 - Auto rotate map
 - Game countdown
-- Server broadcast message
+- Server broadcast message [needs to be patched](https://github.com/wargame-mods/wargame-server/blob/master/patch.py)
 - Sound when the game starts
 - Automatically synchronize remote server variables to local
 - Login information is saved locally
