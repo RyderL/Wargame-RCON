@@ -52,6 +52,13 @@ PORT=8081 && node main.js
 sudo dpkg --add-architecture i386
 sudo apt update
 sudo apt install -y libc6:i386 libuuid1:i386 zlib1g:i386 libstdc++6:i386
+sudo apt install build-essential gcc-multilib
+wget https://www.openssl.org/source/old/1.0.0/openssl-1.0.0t.tar.gz
+tar zxvf openssl-1.0.0t.tar.gz
+cd openssl-1.0.0t
+./Configure linux-generic32 -shared -m32
+make
+sudo cp libcrypto.so.1.0.0 libssl.so.1.0.0 /lib/i386-linux-gnu/
 ```
 
 ## RCON Service unit file example
