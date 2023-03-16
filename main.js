@@ -1466,7 +1466,7 @@ const init = async function() {
 
   global.replacement = await fetchReplacement();
 
-  setTimeout(downloadBannedList(), 300000);
+  setTimeout(downloadBannedList, 300000);
 }
 
 const downloadBannedList = async function() {
@@ -1493,7 +1493,7 @@ const downloadBannedList = async function() {
     } catch {}
 
     // Synchronize the banned list every 5 minutes
-    setTimeout(downloadBannedList(), 300000);
+    setTimeout(downloadBannedList, 300000);
   }
 }
 
