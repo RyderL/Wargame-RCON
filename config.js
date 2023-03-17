@@ -1,7 +1,7 @@
 let hosts = {
   // "ip:port": "wargame server working directory"
   // Example
-  "1.2.3.4:5678": "/data/wargame/1"
+  "127.0.0.1:1234": "/data/wargame/1"
 }
 
 // To enable joint ban, set globalBan to true (WIP)
@@ -16,4 +16,7 @@ let globalBanToken = "50c33524-e450-4352-97b7-3259c45e4fd0";
 // read more https://steamcommunity.com/dev
 let steamApiKey = "YOUR_STEAM_WEB_API_KEY";
 
-module.exports = { hosts, globalBan, globalBanToken, globalBanUrl, steamApiKey };
+// If you need to use chat command, please change this parameter to true
+let enableChatCommand = false;
+
+module.exports = { hosts, globalBan, globalBanToken, globalBanUrl, steamApiKey, enableChatCommand };

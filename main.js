@@ -42,6 +42,7 @@ global.timer = {};
 global.retry = {};
 global.motd = {};
 global.replacement = {source: [], target: []};
+global.bannedList = [];
 
 const DECK_TYPE_MAPPING = {"0": "Motorised", "1": "Armored", "2": "Support", "3": "Marine", "4": "Mecanized", "5": "Airborne", "6": "Naval"};
 const DEFAULT_RESTRICT_NATION_VALUE = {blue: {type: 'BLUFOR', deck: ''}, red: {type: 'REDFOR', deck: ''}};
@@ -86,7 +87,7 @@ app.post('/ban', verifyToken, async function(req, res) {
     body.time = 0;
   }
 
-  await saveBannedInfo({host: body.host, id: body.id, time: body.time, reason: body.reason, banned: body.banned});
+  await saveBannedInfo({host: body.host, id: body.id, time: body.time, reason: body.reason, banned: body.banned, broadcast: true});
 
   if(body.banned) {
     commandHandler({host: body.host, cmd: `kick ${body.id}`});
@@ -176,7 +177,7 @@ io.on('connection', (socket) => {
   
     if(cmd == 'unban' || cmd == 'kick') {
       commandHandler({host: host, cmd: `${cmd} ${req.uid}`});
-      saveBannedInfo({id: req.uid, banned: false});
+      saveBannedInfo({id: req.uid, banned: false, broadcast: true});
     } else if(cmd == 'ban') {
       // Deprecate
       // commandHandler({host: host, cmd: `${cmd} ${req.uid} ${req.value}`});
@@ -222,7 +223,7 @@ io.on('connection', (socket) => {
       return;
     }
 
-    let params = {id: req.uid, time: req.time, reason: req.reason, banned: true, host: req.host};
+    let params = {id: req.uid, time: req.time, reason: req.reason, banned: true, host: req.host, broadcast: true};
 
     await saveBannedInfo(params);
 
@@ -466,13 +467,7 @@ const responseHandler = async function(res) {
       global.cache[host].loginUsers = [];
     }
 
-    if(global.init[host]) {
-      // reload banned list
-      let data = await fetchBannedList(host);
-      global.cache[host].bannedList = data;
-      io.to(host).emit("update-banned-list", {host, data})
-
-    } else {
+    if(!global.init[host]) {
       if(global.timer[host]) {
         return;
       }
@@ -789,30 +784,21 @@ const saveBannedInfo = async function(params) {
 
   logger.info("Player " + info.id + ":" + info.name + " has been " + (params.banned ? "banned" : "unban"));
 
-  let data = null;
-
-  try {
-    data = await db.get("banned");
-    data = JSON.parse(data);;
-  } catch {
-    data = [];
-  }
-  
-  let idx = data.findIndex((item) => item.id == params.id);
+  let idx = global.bannedList.findIndex((item) => item.id == params.id);
 
   let reason = params.reason || '';
 
   if(idx > -1) {
-    let old = data.splice(idx, 1);
+    let old = global.bannedList.splice(idx, 1);
     reason = old[0].reason || reason;
   }
   
-  let time = parseInt(info.time);
+  let time = parseFloat(params.time);
 
   if(isNaN(time)) {
     time = 0;
   } else {
-    time *= 3600000;
+    time = parseInt(time * 3600000);
   }
  
   let now = Date.now();
@@ -821,31 +807,25 @@ const saveBannedInfo = async function(params) {
     info.time = time > 0 ? now + time: 0;
     info.host = params.host;
     info.reason = reason;
-    data.push(info);
+    global.bannedList.push(info);
   }
 
   // Remove players whose ban time has expired
-  data.filter(x => x.time > 0 && x.time - now <= 0).forEach(x => data.splice(data.indexOf(x), 1));
+  global.bannedList.filter(x => x.time > 0 && x.time - now <= 0).forEach(x => global.bannedList.splice(global.bannedList.indexOf(x), 1));
   
-  await save("banned", data);
-  
-  let gap = time - now;
+  await save("banned", global.bannedList);
 
-  if(params.banned && gap > 0 && gap < 2147483647 && !global.timer['ban_' + params.id]) {
-    global.timer['ban_' + params.id] = setTimeout(() => {
-      saveBannedInfo({id: params.id, banned: false});
-    }, gap);
-  } else if(!params.banned && global.timer['ban_' + params.id]) {
-    clearTimeout(global.timer['ban_' + params.id]);
+  if(!global.timer[`unban_${info.id}`] && time > 0 && time < 60000) {
+    global.timer[`unban_${info.id}`] = setTimeout(async () => {
+      await saveBannedInfo({id: info.id, banned: false, broadcast: true});
+    }, time);
   }
 
-  if(params.init) {
+  if(!params.broadcast) {
     return;
   }
 
-  global.bannedList = data;
-
-  io.sockets.emit("update-banned-list", {data})
+  io.sockets.emit("update-banned-list", {data: global.bannedList});
 }
 
 const saveServerVariable = async function(params) {
@@ -1020,7 +1000,7 @@ const fetchBannedList = async function() {
   return result;
 }
 
-const checkBannedList = async function(host, player) {
+const checkBannedInfo = async function(host, player) {
   let info = global.bannedList.filter(item => item.id == player.id);
 
   if(!(info && info.length)) {
@@ -1030,7 +1010,7 @@ const checkBannedList = async function(host, player) {
 
   if(info.time > 0 && info.time - Date.now() <= 0) {
     // unban and pass
-    saveBannedInfo({id: player.id, banned: false});
+    await saveBannedInfo({id: player.id, banned: false, broadcast: true});
     return;
   }
 
@@ -1068,7 +1048,7 @@ const onPlayerConnect = async function(host, params) {
   
   await savePlayerInfo(host, player);
 
-  checkBannedList(host, player);
+  checkBannedInfo(host, player);
 }
 
 const onPlayerDisconnect = async function(host, params) {
@@ -1250,11 +1230,11 @@ const onPlayerReady = async function(host, params) {
 
 const onPlayerBanned = async function(host, params) {
   let time = params[2] * 1;
-  await saveBannedInfo({id: params[1], time: time ? Date.now() + (time * 3600000) : 0, banned: true, host: host});
+  await saveBannedInfo({id: params[1], time: time ? Date.now() + (time * 3600000) : 0, banned: true, host: host, broadcast: true});
 }
 
 const onPlayerUnban = async function(host, params) {
-  await saveBannedInfo({id: params[1], banned: false});
+  await saveBannedInfo({id: params[1], banned: false, broadcast: true});
 }
 
 const onLaunch = async function(host) {
@@ -1467,6 +1447,8 @@ const init = async function() {
   global.replacement = await fetchReplacement();
 
   setTimeout(downloadBannedList, 300000);
+  
+  global.timer.checkBannedList = setInterval(checkBannedList, 60000);
 }
 
 const downloadBannedList = async function() {
@@ -1487,13 +1469,50 @@ const downloadBannedList = async function() {
         }
 
         if(flag) {
-          await save("banned", global.bannedList);
+          save("banned", global.bannedList);
         }
       }
     } catch {}
 
     // Synchronize the banned list every 5 minutes
     setTimeout(downloadBannedList, 300000);
+  }
+}
+
+// Check if there are players who need to unban in the 1 min
+const checkBannedList = async function() {
+  if(global.bannedList) {
+    let now = Date.now();
+    
+    let unbanList = global.bannedList.filter(x => x.time > 0 && x.time - now <= 60000);
+
+    let manualBroadcast = false;
+
+    unbanList.forEach(async x => {
+      let gap = x.time - now;
+
+      if(gap > 60000) {
+        return;
+      }
+
+      if(gap <= 0) {
+        await saveBannedInfo({id: x.id, banned: false, broadcast: false});
+        manualBroadcast = true;
+        return;
+      }
+
+      if(global.timer[`unban_${x.id}`]) {
+        return;
+      }
+
+      global.timer[`unban_${x.id}`] = setTimeout(async () => {
+        await saveBannedInfo({id: x.id, banned: false, broadcast: true});
+      }, gap);
+    });
+
+    if(manualBroadcast) {
+      io.sockets.emit("update-banned-list", {data: global.bannedList});
+    }
   }
 }
 
@@ -1559,6 +1578,10 @@ const log = async function(type, host, line) {
       if(item.time == data.time && item.message == data.message && item.id == data.id && item.name == data.name) {
         return;
       }
+    }
+
+    if(config.enableChatCommand) {
+      return;
     }
 
     // check if it is a chat command

@@ -2,6 +2,11 @@
 
 Web-based wargame red dragon rcon tool
 
+Please note that if you restart the wargame service while rcon is running, rcon will not be able to get the logs correctly, so if you need to restart the wargame service, you also need to restart rcon again.
+
+known issues:
+- if rcon and wargame service are restarted at the same time when there are players in the server, the player list of RCON will be out of sync with the real situation of the server
+
 **this version will use kick to simulate ban command**
 
 [Online Preview](http://wrd.endless.ws/)
