@@ -249,7 +249,7 @@ io.on('connection', (socket) => {
     
     let host = req.host;
 
-    global.cache[host].players = {'-1': [], 0: [], 1: []};
+    global.cache[host].players = [];
 
     broadcastPlayerList(host);
   })
@@ -314,21 +314,20 @@ const broadcast = async function(host) {
   let playerList = [];
 
   if(global.init[host]) {
-    for(let x=0; x<=1; x++) {
-      for(let y=0; y<global.cache[host].players[x].length; y++) {
-        let item = await fetchPlayerInfo({id: global.cache[host].players[x][y], name: 'Unknown'});
-        item.alliance = x;
-  
-        if(!item.status) {
-          item.status = "Waiting";
-        }
-  
-        playerList.push(item);
+    for(let x of global.cache[host].players) {
+      let player = await fetchPlayerInfo({id: x.id, name: 'Unknown'});
+
+      if(!player.status) {
+        player.status = "Waiting";
       }
+
+      playerList.push(player);
     }
   } else {
-    playerList = global.cache[host].players['-1'];
+    playerList = global.cache[host].players;
   }
+
+  playerList.sort((a, b) => a.alliance - b.alliance);
 
   io.to(host).emit("update-server-info", {host, autoRotation, rotationList, bannedList, playerList, logs, messages, settings, state, time, now, countdown, restrict, mode, motd, replacement});
 }
@@ -381,7 +380,7 @@ const loginHandler = async function(data) {
 
   global.cache[host].connected = false;
   global.cache[host].tmp = {host: host, password: data.password};
-  global.cache[host].players = global.cache[host].players || {'-1': [], 0: [], 1: []};
+  global.cache[host].players = [];
   global.cache[host].bannedList = global.cache[host].bannedList || [];
   global.cache[host].rcon = null;
   global.cache[host].rcon = new Rcon(array[0].trim(), array[1].trim(), data.password, {id: global.mapping[host]});
@@ -478,10 +477,10 @@ const responseHandler = async function(res) {
     }
 
     // reload player list
-    let players = await fetchData(host, 'player', {'-1': [], 0: [], 1: []});
+    let players = await fetchData(host, 'player', []);
 
-    if(players.constructor != Object) {
-      players = {'-1': [], 0: [], 1: []};
+    if(players.constructor != Array) {
+      players = [];
     }
 
     global.cache[host].players = players;
@@ -490,7 +489,7 @@ const responseHandler = async function(res) {
 
     let list = data.replace('\0','').replace('Client List :\n','').split('\n');
 
-    global.cache[host].players = {'-1': [], 0: [], 1: []};
+    global.cache[host].players = [];
 
     if(!(list.length == 1 && list[0] == "Server is empty !")) {
       for (let line of list) {
@@ -501,21 +500,7 @@ const responseHandler = async function(res) {
           let id = str.substr(0, idx);
           let name = str.substr(idx + 1);
           
-          let info = await fetchPlayerInfo({id: id, name: name});
-
-          if(global.init[host]) {
-            let alliance =  info.alliance;
-  
-            if(alliance == undefined && info.deckData) {
-              alliance = info.deckData.side;
-            }
-  
-            if(alliance != null && global.cache[host].players[alliance].indexOf(id) == -1) {
-              global.cache[host].players[alliance].push(id);
-            }
-          } else {
-            global.cache[host].players['-1'].push({id: id, name: name});
-          }
+          global.cache[host].players.push({id: id, name: name});
         }
       }
     }
@@ -605,80 +590,58 @@ const fetchPlayerInfo = async function(params) {
 }
 
 const fetchPlayerAllianceFromCache = function(host, id) {
-  let idx = global.cache[host].players[0].indexOf(id);
+  let exists = global.cache[host].players.find(x => x.id == id);
 
-  if(idx > -1) {
-    return 0;
-  }
-
-  idx = global.cache[host].players[1].indexOf(id);
-
-  if(idx > -1) {
-    return 1;
+  if(exists) {
+    return exists.alliance;
   }
 
   return -1;
 }
 
-const fetchAutoAssignAlliance = function(host) {
-  return global.cache[host].players[0].length > global.cache[host].players[1].length ? 1 : 0;
+const fetchPlayerAlliance = function(host, alliance) {
+  if(alliance != null) {
+    return alliance;
+  }
+
+  let blue = global.cache[host].players.filter(x => x.alliance == 0).length;
+  
+  return global.cache[host].players.length - blue > blue ? 1 : 0;
 }
 
-const fetchAllianceFromDeckContent = function(deckContent) {
-  return new DeckDecoder(deckContent).side;
-}
-
-const saveHostPlayers = function(host, id, connected, newAlliance, deckContent) {
+const saveHostPlayers = function(host, id, connected, newAlliance) {
   if(!(host && id && global.cache[host])) {
     return;
   }
 
   if(!global.cache[host].players) {
-    global.cache[host].players = {0: [], 1: []};
+    global.cache[host].players = [];
   }
 
-  let idx1 = global.cache[host].players[0].indexOf(id);
-  let idx2 = global.cache[host].players[1].indexOf(id);
+  let exists = global.cache[host].players.find(x => x.id == id);
 
   if(connected) {
-    if(idx1 == -1 && idx2 == -1) {
-      let alliance = newAlliance;
-      
-      if(alliance == null) {
-        alliance = fetchAutoAssignAlliance(host);
-      } else if(deckContent) {
-        alliance = fetchAllianceFromDeckContent(deckContent);
-      }
+    let alliance = fetchPlayerAlliance(host, newAlliance);
 
-      global.cache[host].players[alliance].push(id);
-    } else if(newAlliance != null){
-      let oldAlliance = null, idx = null;
-
-      if(idx1 > -1) {
-        oldAlliance = 0;
-        idx = idx1;
-      } else if(idx2 > -1) {
-        oldAlliance = 1;
-        idx = idx2;
-      }
-
-      if(idx > -1) {
-        global.cache[host].players[oldAlliance].splice(idx, 1);
-      }
-      
-      global.cache[host].players[newAlliance].push(id);
-    }
+    if(exists) {
+      exists.alliance = alliance;
+    } else {
+      global.cache[host].players.push({id, alliance});
+    } 
 
     broadcastPlayerList(host);
 
     return;
   }
 
-  if(idx1 == -1 && idx2 == -1) {
+  let idx = global.cache[host].players.findIndex(x => x.id == id);
+
+  global.cache[host].players.splice(idx, 1);
+
+  if(idx == -1) {
     return;
   }
   
-  removePlayerFromCache(host, 0, idx1) || removePlayerFromCache(host, 1, idx2);
   broadcastPlayerList(host);
 }
 
@@ -687,28 +650,19 @@ const broadcastPlayerList = async function(host) {
 
   await save(host + "-player", global.cache[host].players);
 
-  for(let x=0; x<=1; x++) {
-    for(let y=0; y<global.cache[host].players[x].length; y++) {
-      let item = await fetchPlayerInfo({id: global.cache[host].players[x][y], name: 'Unknown'});
-      item.alliance = x;
+  for(let x of global.cache[host].players) {
+    let player = await fetchPlayerInfo({id: x.id, name: 'Unknown'});
 
-      if(!item.status) {
-        item.status = "Waiting";
-      }
-
-      items.push(item);
+    if(!player.status) {
+      player.status = "Waiting";
     }
+
+    items.push(player);
   }
+
+  items.sort((a, b) => a.alliance - b.alliance);
 
   io.to(host).emit('update-player-list', {host, items})
-}
-
-const removePlayerFromCache = function(host, alliance, idx) {
-  if(idx != -1) {
-    delete global.cache[host].players[alliance].splice(idx, 1);
-    return true;
-  }
-  return false;
 }
 
 const broadcastMOTD = async function(host) {
@@ -1102,7 +1056,7 @@ const onSetPlayerDeck = async function(host, params) {
     }
   }
 
-  //saveHostPlayers(host, params[1], true, null, params[2]);
+  //saveHostPlayers(host, params[1], true, null);
 
   await savePlayerInfo(host, {id: params[1], deck: str, connected: true});
   
@@ -1116,7 +1070,7 @@ const onSetPlayerDeckName = async function(host, params) {
 }
 
 const onSetPlayerLevel = async function(host, params) {
-  let player = await savePlayerInfo(host, {id: params[1], level: params[2]});
+  //let player = await savePlayerInfo(host, {id: params[1], level: params[2]});
 
   if(!global.cache[host]) {
     return;
@@ -1248,8 +1202,8 @@ const onLaunch = async function(host) {
   global.motd[host] = setTimeout(() => { broadcastMOTD(host); }, 2000);
   
   setTimeout(async () => {
-    for(let id of [].concat(global.cache[host].players[0], global.cache[host].players[1])) {
-      let player = await fetchPlayerInfo({id});
+    for(let x of global.cache[host].players) {
+      let player = await fetchPlayerInfo({id: x.id});
   
       if(!player.connected) {
         commandHandler({host: host, cmd: `kick ${player.id}`});
@@ -1414,7 +1368,6 @@ const init = async function() {
       global.message[key] = [];
     }
 
-    //console.log("process log...");
     //await loadLog(key, config.hosts[key]);
     global.init[key] = true;
 
@@ -1447,7 +1400,7 @@ const init = async function() {
   global.replacement = await fetchReplacement();
 
   setTimeout(downloadBannedList, 300000);
-  
+
   global.timer.checkBannedList = setInterval(checkBannedList, 60000);
 }
 
@@ -1580,7 +1533,7 @@ const log = async function(type, host, line) {
       }
     }
 
-    if(config.enableChatCommand) {
+    if(!config.enableChatCommand) {
       return;
     }
 
