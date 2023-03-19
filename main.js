@@ -1533,7 +1533,7 @@ const log = async function(type, host, line) {
     }
     
     // check if it is a chat command
-    if(!config.enableChatCommand) {
+    if(config.enableChatCommand) {
       for(let command of commands) {
         let m = command.regex.exec(data.message);
     
