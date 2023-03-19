@@ -1532,18 +1532,16 @@ const log = async function(type, host, line) {
         return;
       }
     }
-
-    if(!config.enableChatCommand) {
-      return;
-    }
-
+    
     // check if it is a chat command
-    for(let command of commands) {
-      let m = command.regex.exec(data.message);
-  
-      if(m && m.length >= 1) {
-        await command.handler.apply(this, [host, data.id, m[1]]);
-        break;
+    if(!config.enableChatCommand) {
+      for(let command of commands) {
+        let m = command.regex.exec(data.message);
+    
+        if(m && m.length >= 1) {
+          await command.handler.apply(this, [host, data.id, m[1]]);
+          break;
+        }
       }
     }
   }
