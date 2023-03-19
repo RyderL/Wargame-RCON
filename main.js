@@ -299,7 +299,7 @@ const broadcast = async function(host) {
   let settings = global.cache[host].variable;
   let autoRotation = global.cache[host].rotation;
   let rotationList = global.cache[host].rotationList;
-  let bannedList = global.cache[host].bannedList;
+  let bannedList = global.bannedList;
   let state = fetchtServerState(host);
   let time = global.cache[host].time;
   let countdown = global.cache[host].countdown;
@@ -381,7 +381,6 @@ const loginHandler = async function(data) {
   global.cache[host].connected = false;
   global.cache[host].tmp = {host: host, password: data.password};
   global.cache[host].players = [];
-  global.cache[host].bannedList = global.cache[host].bannedList || [];
   global.cache[host].rcon = null;
   global.cache[host].rcon = new Rcon(array[0].trim(), array[1].trim(), data.password, {id: global.mapping[host]});
   global.cache[host].rcon.on('response', responseHandler);
