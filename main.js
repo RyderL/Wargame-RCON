@@ -167,7 +167,7 @@ io.on('connection', (socket) => {
     saveServerVariable({id: req.id, host: host, key: req.key, value: req.value[req.key]});  
   });
   
-  socket.on('request-exec-command', (req) => {
+  socket.on('request-exec-command', async (req) => {
     if(!verifyRequest(req) || !req.cmd) {
       return;
     }
@@ -181,6 +181,10 @@ io.on('connection', (socket) => {
     } else if(cmd == 'ban') {
       // Deprecate
       // commandHandler({host: host, cmd: `${cmd} ${req.uid} ${req.value}`});
+      
+      commandHandler({host: host, cmd: `kick ${req.uid}`});
+
+      await saveBannedInfo({host: host, id: req.uid, time: req.value, banned: true, broadcast: true});
     } else if(cmd == 'alliance') {
       commandHandler({host: host, cmd: `setpvar ${req.uid} PlayerAlliance ${req.value}`});
     } else if(cmd == 'deck') {
@@ -1069,7 +1073,7 @@ const onSetPlayerDeckName = async function(host, params) {
 }
 
 const onSetPlayerLevel = async function(host, params) {
-  //let player = await savePlayerInfo(host, {id: params[1], level: params[2]});
+  await savePlayerInfo(host, {id: params[1], level: params[2]});
 
   if(!global.cache[host]) {
     return;
