@@ -166,6 +166,8 @@ io.on('connection', (socket) => {
   
     saveServerVariable({id: req.id, host: host, key: req.key, value: req.value[req.key]});  
   });
+ 
+  let MANUAL_COMMAND_BAN_REGEX = /ban ([0-9]+) ([0-9]+)/;
   
   socket.on('request-exec-command', async (req) => {
     if(!verifyRequest(req) || !req.cmd) {
@@ -192,6 +194,14 @@ io.on('connection', (socket) => {
     } else if(cmd == 'launch' || cmd == 'cancel_launch') {
       commandHandler({host: host, cmd: cmd});
     } else if(req.manual) {
+      let m = MANUAL_COMMAND_BAN_REGEX.exec(cmd);
+      
+      if(m && m.length >= 0) {
+        commandHandler({host: host, cmd: `kick ${m[1]}`});
+        await saveBannedInfo({host: host, id: m[1], time: m[2], banned: true, broadcast: true});
+        return;
+      }
+
       commandHandler({host: host, cmd: cmd});
     }  
   });
