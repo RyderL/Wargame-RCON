@@ -1014,14 +1014,18 @@ new Vue({
       }
       
       var current = null;
+      var name = null;
       
       for (const key in presets) {
-        current = presets[key];
-        break;
+        presets[key] = Object.assign({}, this.default, presets[key]);
+
+        if(!current) {
+          name = key;
+          current = presets[key];
+        }
       }
       
-      if(current == null)
-      {
+      if(current == null) {
         return;
       }
 
@@ -1030,8 +1034,11 @@ new Vue({
 
       this.presets = presets;
       this.current = current;
+
       this.savePresets();
 
+      localStorage.setItem("name", name);
+      
       this.toast("Preset imported successfully");
     },
     cancelImport: function() {

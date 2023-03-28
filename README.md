@@ -11,13 +11,11 @@ Please note that if you restart the wargame service while rcon is running, rcon 
 <i>recommended to use the 127.0.0.1 loopback address to connect to the server</i>
 
 #### Screenshot
-
 <div align="center">
     <img src="./screenshot.jpg">
 </div>
 
 # Features
-
 - Server variables settings
 - Player management
 - Level restrictions
