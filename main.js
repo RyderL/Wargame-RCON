@@ -1174,6 +1174,10 @@ const onChangePlayerStatus = async function(host, params) {
     return;
   }
 
+  if(params[2] == "52") {
+    global.cache[host].loaded.push(params[1]);
+  }
+
   await savePlayerInfo(host, {id: params[1], status: status});
 
   broadcastPlayerList(host);
@@ -1230,11 +1234,22 @@ const onEnterLobby = function(host, params) {
 }
 
 const onGameLoading = function(host, params) {
+  global.cache[host].loaded = [];
+
   updateServerState(host, 'Loading');
   broadcastPlayerList(host);
 }
 
 const onGameDeployment = function(host, params) {
+  global.cache[host].players
+    .filter(x => !global.cache[host].loaded.includes(x.id))
+    .forEach(x => {
+        global.cache[host].players.splice(global.cache[host].players.findIndex(v => v.id == x.id), 1);
+    });
+  
+  global.cache[host].loaded = null;
+  delete global.cache[host].loaded;
+
   updateServerState(host, 'Deploying');
   broadcastPlayerList(host);
 }
