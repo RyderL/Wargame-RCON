@@ -6,14 +6,14 @@ Please note that if you restart the wargame service while rcon is running, rcon 
 
 **this version will use kick to simulate ban command**
 
-[Online Preview](http://wrd.endless.ws/)
-
 <i>recommended to use the 127.0.0.1 loopback address to connect to the server</i>
 
 #### Screenshot
 <div align="center">
     <img src="./screenshot.jpg">
 </div>
+
+[Online Preview](http://wrd.endless.ws/)
 
 # Features
 - Server variables settings
