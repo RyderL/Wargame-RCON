@@ -1252,10 +1252,18 @@ const onGameLoading = function(host, params) {
 
 const onGameDeployment = function(host, params) {
   global.cache[host].players
-    .filter(x => !global.cache[host].loaded.includes(x.id))
-    .forEach(x => {
-        global.cache[host].players.splice(global.cache[host].players.findIndex(v => v.id == x.id), 1);
-    });
+  .filter(x => !global.cache[host].loaded.includes(x.id))
+  .forEach(x => {
+    global.cache[host].players.splice(global.cache[host].players.findIndex(v => v.id == x.id), 1);
+  });
+  
+  let array = global.cache[host].players.map(x => x.id);
+  
+  global.cache[host].loaded
+  .filter(x => !array.includes(x))
+  .forEach(x => {
+    global.cache[host].players.push({id: x});
+  });
   
   global.cache[host].loaded = null;
   delete global.cache[host].loaded;
