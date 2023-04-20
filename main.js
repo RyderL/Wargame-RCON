@@ -63,6 +63,10 @@ app.get('/', function (req, res) {
   res.sendFile( __dirname + "/index.html" );
 });
 
+app.get('/v2', function (req, res) {
+  res.sendFile( __dirname + "/v2.html" );
+});
+
 app.get('/player/:id', async function(req, res){
   if(!req.params.id) {
     return;

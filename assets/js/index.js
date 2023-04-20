@@ -7,15 +7,15 @@ new Vue({
       maps: {
         // 1vs1
         "2x3_Esashi":{name: "Tropic Thunder", mode: 1},
-        "2x3_Gangjin":{name: "Mud fight", mode: 1},    
+        "2x3_Gangjin":{name: "Mud fight !", mode: 1},    
         "2x3_Hwaseong":{name: "Nuclear winter is coming", mode: 1},
         "2x2_port_Wonsan_Terrestre":{name: "Wonsan harbour", mode: 1},
         "3x3_Muju":{name: "Plunjing Valley", mode: 1},
         "2x3_Montagne_1":{name: "Death Row", mode: 1},
-        "5x3_Marine_1_small_Terrestre":{name: "Strait to the Point", mode: 1},
         "2x3_Tohoku_Alt":{name: "Paddy Field", mode: 1},
         "3x3_Muju_Alt":{name: "Punchbowl", mode: 1},
         "3x3_Marine_3_Reduite_Terrestre":{name: "Hell in a very small place", mode: 1},
+        "5x3_Marine_1_small_Terrestre":{name: "Strait to the point (small)", mode: 1},
         "2x2_port_Wonsan":{name: "Wonsan harbour", mode: 1, water: 2},
         "4x4_Marine_6":{name: "Out of the blue", mode: 1, water: 1},
         "4x4_Marine_7":{name: "Standoff in Barents", mode: 1, water: 1},
@@ -25,12 +25,12 @@ new Vue({
         "2x3_Tohoku":{name: "Paddy Field", mode: 2},
         "2x3_Anbyon":{name: "Hop and Glory", mode: 2},
         "3x2_Montagne_3":{name: "Chosin Reservoir", mode: 2},
-        "3x2_Taebuko":{name: "Jungle Law", mode: 2},
+        "3x2_Taebuko":{name: "Jungle LAW", mode: 2},
         "3x2_Haenam_Alt":{name: "Operation Chromite", mode: 2},
         "3x3_Highway_Small":{name: "Highway to Seoul", mode: 2},
-        "3x2_Boryeong_Terrestre":{name: "Gunboat Diplomacy", mode: 2},
-        "3x3_Marine_3_Terrestre":{name: "Another D-Day in Paradise ", mode: 2},
-        "5x3_Marine_1_small":{name: "Strait to the Point", mode: 2, water: 2},
+        "3x2_Boryeong_Terrestre":{name: "Gunboat diplomacy", mode: 2},
+        "3x3_Marine_3_Terrestre":{name: "Another D-Day in paradise ", mode: 2},
+        "5x3_Marine_1_small":{name: "Strait to the point (small)", mode: 2, water: 2},
         "4x4_Marine_10":{name: "Alea Jacta West", mode: 2, water: 1},
         "4x4_Marine_9":{name: "Bulldogs and Vampires", mode: 2, water: 1},
             
@@ -40,7 +40,7 @@ new Vue({
         "3x2_Taean":{name: "Bloody Ridge", mode: 3},
         "2x3_Montagne_2":{name: "Cliff Hanger", mode: 3}, 
         "3x2_Haenam":{name: "Back to Inchon", mode: 3},
-        "5x3_Marine_1_Terrestre":{name: "Strait to the Point", mode: 3},
+        "5x3_Marine_1_Terrestre":{name: "Strait to the point", mode: 3},
         "3x3_Pyeongtaek_Alt":{name: "38th Perpendicular", mode: 3},
         "3x3_Highway":{name: "Highway to Seoul", mode: 3},
         "3x3_Thuringer_Wald":{name: "Snake Pit", mode: 3},
@@ -58,12 +58,12 @@ new Vue({
         "3x3_Chongju":{name: "Korean Rocks", mode: 4},
         "3x3_Montagne_1":{name: "Cold War Z", mode: 4},
         "3x3_Gangjin":{name: "Floods", mode: 4},
-        "4x4_ThreeMileIsland":{name: "Sun of Juche (Three Miles Island long)", mode: 4},
-        "4x4_ThreeMileIsland_Alt":{name: "Final Meltdown (Three Miles Island larg)", mode: 4},
-        "5x3_Marine_1":{name: "Strait to the point", mode: 4, water: 2},
-        "3x3_Marine_2":{name: "Smoke in the water", mode: 4, water: 2},
+        "4x4_ThreeMileIsland":{name: "Sun of Juche", mode: 4},
+        "4x4_ThreeMileIsland_Alt":{name: "Final Meltdown", mode: 4},
         "4x3_Gjoll":{name: "Heartbreak Ridge", mode: 4},
         "3x3_Asgard":{name: "The Crown of Crags", mode: 4},
+        "5x3_Marine_1":{name: "Strait to the point", mode: 4, water: 2},
+        "3x3_Marine_2":{name: "Smoke in the water", mode: 4, water: 2},
             
         //10vs10
         "5x3_Asgard_10v10":{name: "Asgard", mode: 10},
@@ -72,16 +72,17 @@ new Vue({
       },
       gameMode: {
         1: "Destruction",
+        2: "Siege",
         3: "Economy",
         4: "Conquest"
       },
       gameType: {
-        0: "Showdown",
-        1: "BLUFOR",
-        2: "REDFOR"
+        0: "NATO vs PACT",
+        1: "NATO vs NATO",
+        2: "PACT vs PACT"
       },
       incomeRate: {
-        0: "No",
+        0: "None",
         1: "Very low",
         2: "Low",
         3: "Medium",
@@ -89,7 +90,7 @@ new Vue({
         5: "Very High"
       },
       thematic: {
-        "-1": "No",
+        "-1": "None",
         "-2": "Any",
         "0": "Motorised",
         "1": "Armored",
@@ -101,13 +102,13 @@ new Vue({
       },
       thematicSeq: [-1, -2, 0, 1, 2, 3, 4, 5, 6],
       date: {
-        "-1": "No",
+        "-1": "None",
         "0": "Post-85",
         "1": "Post-80"
       },
       dateSeq: [-1, 0, 1],
       nation: {
-        "-1": "No",
+        "-1": "None",
         "0": "Nations and coalitions",
         "1": "Nations only",
         "2": "Coalitions only"
@@ -120,15 +121,15 @@ new Vue({
       restrict: [-1, 0, 1, 2, 3, 4, 5],
       time: {
         "1": "1 Hour",
-        "12": "12 Hour",
+        "12": "12 Hours",
         "24": "1 Day",
-        "72": "3 Day",
-        "168": "1 Week",
-        "336": "2 Week",
-        "720": "1 Month",
-        "1440": "2 Month",
-        "2160": "3 Month",
-        "4320": "6 Month",
+        "72": "3 Days",
+        "168": "1 Weeks",
+        "336": "2 Weeks",
+        "720": "1 Months",
+        "1440": "2 Months",
+        "2160": "3 Months",
+        "4320": "6 Months",
         "0": "Permanent"
       }
     },
@@ -195,9 +196,7 @@ new Vue({
       name: '',
       showDeck: null,
       showBan: null,
-      showDeckRestrict: false,
-      showLevelRestrict: false,
-      showNationRestrict: false,
+      showRestrict: false,
       showLogs: 1,
       showMotd: false,
       import: null,
@@ -849,8 +848,7 @@ new Vue({
       this.info.connected = false;
       this.info.time = '';
       this.info.countdown = 0;
-      this.info.showDeckRestrict = false;
-      this.info.showLevelRestrict = false;
+      this.info.showRestrict = false;
       this.info.show = 1;
       
       this.stopCountdown();
