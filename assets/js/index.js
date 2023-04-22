@@ -196,6 +196,9 @@ new Vue({
       name: '',
       showDeck: null,
       showBan: null,
+      showDeckRestrict: false,
+      showLevelRestrict: false,
+      showNationRestrict: false,
       showRestrict: false,
       showLogs: 1,
       showMotd: false,
@@ -848,6 +851,9 @@ new Vue({
       this.info.connected = false;
       this.info.time = '';
       this.info.countdown = 0;
+      this.info.showDeckRestrict = false;
+      this.info.showLevelRestrict = false;
+      this.info.showNationRestrict = false;
       this.info.showRestrict = false;
       this.info.show = 1;
       
