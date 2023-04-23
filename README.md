@@ -47,7 +47,7 @@ yarn
 PORT=8081 && node main.js
 ```
 
-## How to enable 32 bit support on 64 bit linux (debian, ubuntu)
+## How to enable 32 bit support on 64 bit linux and compile 32 bit openssl (debian, ubuntu)
 ```bash
 sudo dpkg --add-architecture i386
 sudo apt update

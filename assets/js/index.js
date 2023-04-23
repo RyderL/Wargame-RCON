@@ -202,6 +202,7 @@ new Vue({
       showRestrict: false,
       showLogs: 1,
       showMotd: false,
+      fullscreen: false,
       import: null,
       presets: '',
       banTime: 24,

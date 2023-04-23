@@ -270,13 +270,13 @@ label,
 
 .wrd-scroll::-webkit-scrollbar-track
 {
-	-webkit-box-shadow: inset 0 0 6px rgb(41, 87, 58);
+	-webkit-box-shadow: inset 0 0 0.5vw rgb(41, 87, 58);
 	background-color: #F5F5F5;
 }
 
 .wrd-scroll::-webkit-scrollbar
 {
-	width: 8px;
+	width: 0.5vw;
 	background-color: #F5F5F5;
 }
 
@@ -509,6 +509,60 @@ label,
 
 .wrd-motd-text::placeholder {
   text-align: left;
+}
+
+.wrd-message-panel {
+  position:relative;
+}
+
+.wrd-message-mask {
+  background: #000;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: block;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  z-index: 100;
+  opacity: 0.85;
+}
+
+.wrd-message {
+  z-index: 101;
+  height:190px;
+  overflow-y:scroll;
+}
+
+.wrd-message-full {
+  overflow-y: scroll;
+  height: 100vh;
+  width: 99.5vw;
+  top: 0px;
+  left: 0px;
+  position: fixed;
+}
+
+.wrd-fullscreen-icon {
+  background-image: url(/assets/img/fullscreen.png);
+  background-size: 75%;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 33px;
+  height: 33px;
+}
+
+.wrd-fullscreen-exit-icon {
+  background-image: url(/assets/img/fullscreen-exit.png);
+  background-size: 75%;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 33px;
+  height: 33px;
+  position: fixed;
+  bottom: 1vw;
+  right: 2vw;
+  z-index: 102;
 }
 
 @keyframes refresh {
