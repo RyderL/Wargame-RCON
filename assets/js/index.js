@@ -217,6 +217,7 @@ new Vue({
       countdown: null,
       command: null,
       refresh: null,
+      scroll: null,
       other: null
     },
     style: "background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url('/assets/img/bg/0.jpg');",
@@ -351,7 +352,8 @@ new Vue({
     "current.settings.MaxTeamSize": function(current, prev) { current != prev && this.saveSetting("MaxTeamSize") },
     "current.settings.ThematicConstraint": function(current, prev) { current != prev && this.saveSetting("ThematicConstraint") },
     "current.settings.NationConstraint": function(current, prev) { current != prev && this.saveSetting("NationConstraint") },
-    "current.settings.DateConstraint": function(current, prev) { current != prev && this.saveSetting("DateConstraint") }
+    "current.settings.DateConstraint": function(current, prev) { current != prev && this.saveSetting("DateConstraint") },
+    "info.showLogs": function() { this.scrollToEnd(); }
   },
   methods: {
     toast: function(text) {
@@ -413,8 +415,8 @@ new Vue({
         }
       }
 
-      this.info.logs = res.logs;
-      this.info.messages = res.messages;
+      this.info.logs = res.logs.reverse();
+      this.info.messages = res.messages.reverse();
       this.info.playerList = res.playerList || [];
       this.info.bannedList = res.bannedList;
       this.info.state = res.state;
@@ -446,6 +448,8 @@ new Vue({
       this.info.rotationList = list;
       this.info.connected = true;
       this.savePresets();
+
+      this.scrollToEnd();
     },
     onUpdateVariable: function(res) {
       if(!this.verifyRequest(res) || res.id == this.id) {
@@ -508,14 +512,16 @@ new Vue({
         return;
       }
       
-      this.info.logs = [res.item].concat(this.info.logs);
+      this.info.logs = this.info.logs.concat(res.item);
+      this.scrollToEnd();
     },
     onUpdateMessage: function(res) {
       if(!this.verifyRequest(res)) {
         return;
       }
 
-      this.info.messages = [res.item].concat(this.info.messages);
+      this.info.messages = this.info.messages.concat(res.item);
+      this.scrollToEnd();
     },
     onUpdateState: function(res) {
       if(!this.verifyRequest(res)) {
@@ -610,6 +616,22 @@ new Vue({
     },
     toggle(key, value) {
       this.info[key] = value;
+
+      if(key != "fullscreen") {
+        return;
+      }
+
+      this.scrollToEnd();
+    },
+    scrollToEnd() {
+      if(this.timer.scroll != null) {
+        return;
+      }
+
+      this.timer.scroll = setTimeout(() => {
+        this.$refs.message.scrollTo(0, this.$refs.message.scrollHeight);
+        this.timer.scroll = null;
+      }, 100);
     },
     mute() {
       this.info.mute = true;

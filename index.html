@@ -877,7 +877,7 @@
             <i class="wrd-button-1 wrd-fullscreen-icon" style="margin-left: 4px;" v-on:click="toggle('fullscreen', true)"></i>
             <i class="wrd-button-1 wrd-fullscreen-exit-icon" style="margin-left: 4px;" v-if="info.fullscreen" v-on:click="toggle('fullscreen', false)"></i>
           </div>
-          <div class="wrd-border wrd-text-2 wrd-scroll wrd-select-allowed p-2 wrd-message">
+          <div class="wrd-border wrd-text-2 wrd-scroll wrd-select-allowed p-2 wrd-message" ref="message">
             <div v-for="(line, index) in info.logs" v-if="info.showLogs==1">
               {{line}}
             </div>
