@@ -534,7 +534,40 @@ label,
   overflow-y:scroll;
 }
 
-.wrd-message-full {
+.wrd-message-btn-group {
+  position: absolute; 
+  top: 6px; 
+  right: 26px; 
+  text-align:center; 
+  display: flex;
+  z-index: 102;
+}
+
+.wrd-fullscreen-icon, .wrd-fullscreen-exit-icon {
+  background-size: 75%;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 33px;
+  height: 33px;
+}
+
+.wrd-fullscreen-icon {
+  background-image: url(/assets/img/fullscreen.png);
+}
+
+.wrd-fullscreen-exit-icon {
+  background-image: url(/assets/img/fullscreen-exit.png);
+  display: none;
+}
+
+.wrd-message-full .wrd-message-btn-group {
+  position: fixed;
+  top: unset;
+  bottom: 1vw;
+  right: 2vw;
+}
+
+.wrd-message-full .wrd-message {
   overflow-y: scroll;
   height: 100vh;
   width: 99.5vw;
@@ -543,26 +576,12 @@ label,
   position: fixed;
 }
 
-.wrd-fullscreen-icon {
-  background-image: url(/assets/img/fullscreen.png);
-  background-size: 75%;
-  background-position: center;
-  background-repeat: no-repeat;
-  width: 33px;
-  height: 33px;
+.wrd-message-full .wrd-fullscreen-icon {
+  display: none;
 }
 
-.wrd-fullscreen-exit-icon {
-  background-image: url(/assets/img/fullscreen-exit.png);
-  background-size: 75%;
-  background-position: center;
-  background-repeat: no-repeat;
-  width: 33px;
-  height: 33px;
-  position: fixed;
-  bottom: 1vw;
-  right: 2vw;
-  z-index: 102;
+.wrd-message-full .wrd-fullscreen-exit-icon {
+  display: block;
 }
 
 @keyframes refresh {

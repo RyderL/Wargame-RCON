@@ -865,19 +865,19 @@
         </div>
       </div>
       <div class="row" v-if="info.mode == 1">
-        <div class="col wrd-message-panel">
-          <div style="position: absolute; top: 6px; right: 26px; text-align:center; display: flex;">
+        <div class="col wrd-message-panel" v-bind:class="{'wrd-message-full': info.fullscreen}">
+          <div class="wrd-message-mask" v-if="info.fullscreen"></div>
+          <div class="wrd-message-btn-group">
             <div class="btn-group" role="group">
               <input type="radio" class="btn-check" name="btnradio" id="btnLogs1" autocomplete="off" value="1" v-model="info.showLogs">
               <label class="btn wrd-button-2" for="btnLogs1">Logs</label>
               <input type="radio" class="btn-check" name="btnradio" id="btnLogs2" autocomplete="off" value="2" v-model="info.showLogs">
               <label class="btn wrd-button-2" for="btnLogs2">Messages</label>
             </div>
-            <i class="wrd-button-1 wrd-fullscreen-icon" style="margin-left: 3px;" v-on:click="toggle('fullscreen', true)"></i>
+            <i class="wrd-button-1 wrd-fullscreen-icon" style="margin-left: 4px;" v-on:click="toggle('fullscreen', true)"></i>
+            <i class="wrd-button-1 wrd-fullscreen-exit-icon" style="margin-left: 4px;" v-if="info.fullscreen" v-on:click="toggle('fullscreen', false)"></i>
           </div>
-          <div class="wrd-message-mask" v-if="info.fullscreen"></div>
-          <i class="wrd-button-1 wrd-fullscreen-exit-icon" v-if="info.fullscreen" v-on:click="toggle('fullscreen', false)"></i>
-          <div class="wrd-border wrd-text-2 wrd-scroll wrd-select-allowed p-2 wrd-message" v-bind:class="{'wrd-message-full': info.fullscreen}">
+          <div class="wrd-border wrd-text-2 wrd-scroll wrd-select-allowed p-2 wrd-message">
             <div v-for="(line, index) in info.logs" v-if="info.showLogs==1">
               {{line}}
             </div>
