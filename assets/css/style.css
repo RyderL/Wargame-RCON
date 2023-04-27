@@ -563,8 +563,8 @@ label,
 .wrd-message-full .wrd-message-btn-group {
   position: fixed;
   top: unset;
-  bottom: 1vw;
-  right: 2vw;
+  bottom: 8px;
+  right: 26px;
 }
 
 .wrd-message-full .wrd-message {
