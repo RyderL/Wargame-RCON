@@ -443,7 +443,7 @@
             </div>
 
             <div class="col text-end" style="margin-right: -11px; margin-left: 11px;display: flex;justify-content: flex-end;">
-              <span style="color: #94C3A3;align-self: center;" class="me-2">Banned decks:</span>
+              <span style="color: #94C3A3;align-self: center;" class="me-2">Banned decks: <span class="ms-2" v-if="current.restrict.deck.type.length == 0">none</span></span>
               <span class="wrd-icon-4" v-for="(item, index) in current.restrict.deck.type" v-bind:value="index" v-on:click="removeRestrictDeck(item, index)">
                 <img :src="'/assets/img/thematic_' + item + '.png'" class="img-fluid">
               </span>

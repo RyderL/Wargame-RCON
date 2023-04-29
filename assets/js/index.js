@@ -456,8 +456,6 @@ new Vue({
         delete restrict.max;
       }
 
-      console.log(restrict);
-
       this.current.restrict = restrict;
 
       this.info.rotationList = list;
