@@ -336,7 +336,7 @@ label,
 .dropdown-menu {
   /*background-color: #29573A;*/
   background-color: #346546;
-  border: 1px solid #666;
+  border: none;
   max-height: 380px;
 }
 
@@ -606,10 +606,6 @@ label,
 
 .wrd-message-full .wrd-fullscreen-exit-icon {
   display: block;
-}
-
-.dropdown-menu{
-  border: none !important;
 }
 
 @keyframes refresh {

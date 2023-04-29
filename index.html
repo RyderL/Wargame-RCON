@@ -422,7 +422,7 @@
 
             <div class="col">
               <div class="row">
-                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Restrict deck</label>
+                <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Deck</label>
                 <div class="col-sm-8 p-0" style="display:flex;">
                   <div class="btn-group w-100">
                     <button class="btn btn-secondary btn-sm dropdown-toggle" style="border-radius: 0;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
@@ -443,6 +443,7 @@
             </div>
 
             <div class="col text-end" style="margin-right: -11px; margin-left: 11px;display: flex;justify-content: flex-end;">
+              <span style="color: #94C3A3;align-self: center;" class="me-2">Banned list:</span>
               <span class="wrd-icon-4" v-for="(item, index) in current.restrict.deck.type" v-bind:value="index" v-on:click="removeRestrictDeck(item, index)">
                 <img :src="'/assets/img/thematic_' + item + '.png'" class="img-fluid">
               </span>
