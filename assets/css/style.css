@@ -209,6 +209,26 @@ label,
   height: 20px;
 }
 
+.wrd-icon-4 {
+  width: 31px;
+  height: 31px;
+  text-align: center;
+}
+
+.wrd-icon-4 img {
+  width: 23px;
+  height: 23px;
+  margin: 4px;
+}
+
+.wrd-icon-4:hover {
+  -moz-transition: all .2s ease-in;
+  -o-transition: all .2s ease-in;
+  -webkit-transition: all .2s ease-in;
+  transition: all .2s ease-in;
+  background-color: #81C3A3;
+}
+
 .wrd-map-icon {
   margin: auto 0;
   width: 36px;
@@ -336,7 +356,7 @@ label,
   border-bottom: 1px solid #666;
 } */
 
-.wrd-button-1, .wrd-button-2, .wrd-button-3 {
+.wrd-button, .wrd-button-s {
   background-color: #29573A;
   color: white;
   font-family: 'Exo 2', sans-serif;
@@ -344,7 +364,7 @@ label,
   border-radius: 0px;
 }
 
-.wrd-button-1:hover, .wrd-button-2:hover, .wrd-button-3:hover {
+.wrd-button:hover, .wrd-button-s:hover {
   -moz-transition: all .2s ease-in;
   -o-transition: all .2s ease-in;
   -webkit-transition: all .2s ease-in;
@@ -352,19 +372,19 @@ label,
   background-color: #81C3A3;
 }
 
-.wrd-button-3 {
+.btn-check:checked + .wrd-button {
+  -moz-transition: all .2s ease-in;
+  -o-transition: all .2s ease-in;
+  -webkit-transition: all .2s ease-in;
+  transition: all .2s ease-in;
+  background-color: #81C3A3;
+}
+
+.wrd-button-s {
   display: flex;
   align-items: center;
   justify-content: center;
   align-content: center;
-}
-
-.btn-check:checked + .wrd-button-2 {
-  -moz-transition: all .2s ease-in;
-  -o-transition: all .2s ease-in;
-  -webkit-transition: all .2s ease-in;
-  transition: all .2s ease-in;
-  background-color: #81C3A3;
 }
 
 .wrd-border {
@@ -398,7 +418,7 @@ label,
   width:100%;
   height:100%;
   background: #000;
-  opacity: 0.5;
+  opacity: 0.85;
   z-index: 100;
 }
 
@@ -517,10 +537,10 @@ label,
 
 .wrd-message-mask {
   background: #000;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
-  display: block;
+  display: none;
   position: fixed;
   top: 0px;
   left: 0px;
@@ -576,12 +596,20 @@ label,
   position: fixed;
 }
 
+.wrd-message-full .wrd-message-mask {
+  display: block;
+}
+
 .wrd-message-full .wrd-fullscreen-icon {
   display: none;
 }
 
 .wrd-message-full .wrd-fullscreen-exit-icon {
   display: block;
+}
+
+.dropdown-menu{
+  border: none !important;
 }
 
 @keyframes refresh {

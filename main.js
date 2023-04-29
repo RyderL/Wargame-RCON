@@ -45,6 +45,8 @@ global.replacement = {source: [], target: []};
 global.bannedList = [];
 
 const DECK_TYPE_MAPPING = {"0": "Motorised", "1": "Armored", "2": "Support", "3": "Marine", "4": "Mecanized", "5": "Airborne", "6": "Naval"};
+const DEFAULT_RESTRICT_LEVEL_VALUE = {min: 0, max: 0};
+const DEFAULT_RESTRICT_DECK_VALUE = {type: [], blue: '', red: ''};
 const DEFAULT_RESTRICT_NATION_VALUE = {blue: {type: 'BLUFOR', deck: ''}, red: {type: 'REDFOR', deck: ''}};
 const DEFAULT_PLAYER_INFO = {id: null, name: '', deck: '', deckName: '', elo: 1500, level: 1};
 
@@ -215,7 +217,7 @@ io.on('connection', (socket) => {
       return;
     }
 
-    saveRestrict(req.id, req.host, {deck: req.deck, blue: req.blue, red: req.red, min: req.min || 0, max: req.max || 0, nation: req.nation || DEFAULT_RESTRICT_NATION_VALUE});
+    saveRestrict(req.id, req.host, {deck: req.deck || DEFAULT_RESTRICT_DECK_VALUE, level: req.level || DEFAULT_RESTRICT_LEVEL_VALUE, nation: req.nation || DEFAULT_RESTRICT_NATION_VALUE});
   });
 
   socket.on('request-update-motd', (req) => {
@@ -897,13 +899,33 @@ const saveRotationStatus = async function(id, host, status) {
 }
 
 const fetchRestrict = async function(host) {
-  let restrict = await fetchData(host, "restrict", {deck: -1, blue: '', red: '', min: 0, max: 0, nation: DEFAULT_RESTRICT_NATION_VALUE});
+  let restrict = await fetchData(host, "restrict", {level: DEFAULT_RESTRICT_LEVEL_VALUE, deck: DEFAULT_RESTRICT_DECK_VALUE, nation: DEFAULT_RESTRICT_NATION_VALUE});
 
-  if(restrict.nation) {
-    return restrict;
+  if(restrict.deck && restrict.deck > -1) {
+    restrict.deck = {type: [restrict.deck], blue: restrict.blue, red: restrict.red};
+
+    delete restrict.blue;
+    delete restrict.red;
   }
 
-  restrict.nation = DEFAULT_RESTRICT_NATION_VALUE;
+  if(restrict.min || restrict.max) {
+    restrict.level = {min: restrict.min, max: restrict.max};
+
+    delete restrict.min;
+    delete restrict.max;
+  }
+
+  if(!restrict.level) {
+    restrict.level = DEFAULT_RESTRICT_LEVEL_VALUE;
+  }
+
+  if(!restrict.deck) {
+    restrict.deck = DEFAULT_RESTRICT_DECK_VALUE;
+  }
+
+  if(!restrict.nation) {
+    restrict.nation = DEFAULT_RESTRICT_NATION_VALUE;
+  }
 
   return restrict;
 }
@@ -1055,9 +1077,8 @@ const onSetPlayerDeck = async function(host, params) {
   alliance = ['blue', 'red'][alliance];
 
   if(restrict) {
-    if(restrict.deck >= 0 && deck.spec == restrict.deck) {
-  
-      str = restrict[alliance];
+    if(restrict.deck && restrict.deck.type && restrict.deck.type.indexOf(deck.spec) > -1) {
+      str = restrict.deck[alliance];
   
       if(str && str.trim().length){
         global.cache[host].rcon.send(`setpvar ${params[1]} PlayerDeckContent ${str}`);
@@ -1096,16 +1117,16 @@ const onSetPlayerLevel = async function(host, params) {
   let restrict = global.cache[host].restrict;
   let level = params[2];
   
-  if(!((restrict.min == null || restrict.min == 0 || level >= restrict.min) && (restrict.max == null || restrict.max == 0 || level <= restrict.max))) {
+  if(restrict.level && !((restrict.level.min == null || restrict.level.min == 0 || level >= restrict.level.min) && (restrict.level.max == null || restrict.level.max == 0 || level <= restrict.level.max))) {
 
     let msg = "";
 
-    if(restrict.min > 0 && restrict.max == 0) {
-      msg = `this server only allows players higher than ${restrict.min} level to enter`;
-    } else if(restrict.min == 0 && restrict.max > 0) {
-      msg = `this server only allows players below ${restrict.max} level to enter`;
+    if(restrict.level.min > 0 && restrict.level.max == 0) {
+      msg = `this server only allows players higher than ${restrict.level.min} level to enter`;
+    } else if(restrict.level.min == 0 && restrict.level.max > 0) {
+      msg = `this server only allows players below ${restrict.level.max} level to enter`;
     } else {
-      msg = `this server only allows players with levels between ${restrict.min} and ${restrict.max} to enter`;
+      msg = `this server only allows players with levels between ${restrict.level.min} and ${restrict.level.max} to enter`;
     }
 
     chat(host, msg);

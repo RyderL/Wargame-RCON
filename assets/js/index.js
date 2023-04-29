@@ -167,12 +167,8 @@ new Vue({
         DateConstraint: -1
       },
       restrict: {
-        deck: -1,
-        blue: '',
-        red: '',
-        level: 0,
-        min: 0,
-        max: 0,
+        deck: {type: [], blue: '', red: ''},
+        level: {min: 0, max: 0},
         nation: {
           blue: {type: 'BLUFOR', deck: ''},
           red: {type: 'REDFOR', deck: ''}
@@ -199,7 +195,6 @@ new Vue({
       showDeckRestrict: false,
       showLevelRestrict: false,
       showNationRestrict: false,
-      showRestrict: false,
       showLogs: 1,
       showMotd: false,
       fullscreen: false,
@@ -211,7 +206,8 @@ new Vue({
       countdown: 0,
       time: '',
       mute: false,
-      mode: 1
+      mode: 1,
+      currentDeck: -1
     },
     timer: {
       countdown: null,
@@ -426,7 +422,6 @@ new Vue({
       this.onUpdateState({host: res.host, state: res.state, time: res.time, countdown: res.countdown});
 
       this.current.connected = true;
-      this.current.restrict = res.restrict;
       this.current.autoRotation = res.autoRotation;
       this.current.settings = Object.assign({}, this.current.settings, res.settings);
       this.presets[this.current.name] = this.current;
@@ -444,6 +439,26 @@ new Vue({
           list.push(item);
         }
       }
+
+      let restrict = res.restrict;
+
+      if(restrict.deck && restrict.deck > -1) {
+        restrict.deck = {type: [restrict.deck], blue: restrict.blue, red: restrict.red};
+    
+        delete restrict.blue;
+        delete restrict.red;
+      }
+
+      if(restrict.min != null || restrict.max != null) {
+        restrict.level = {min: restrict.min, max: restrict.max};
+        
+        delete restrict.min;
+        delete restrict.max;
+      }
+
+      console.log(restrict);
+
+      this.current.restrict = restrict;
 
       this.info.rotationList = list;
       this.info.connected = true;
@@ -726,8 +741,41 @@ new Vue({
 
       this.socket.emit('request-update-motd', this.buildRequestParams({motd: this.current.motd}));
     },
-    updateRestrictDeck(val) {
-      this.current.restrict.deck = val;
+    chooseDeckType(val) {
+      this.info.currentDeck = val;
+    },
+    addRestrictDeck() {
+      if(this.info.currentDeck == null || this.info.currentDeck == -1) {
+        return;
+      }
+
+      if(this.current.restrict.deck.type.indexOf(this.info.currentDeck) > -1) {
+        return;
+      }
+
+      this.current.restrict.deck.type.push(this.info.currentDeck);
+
+      this.updatePreset();
+
+      this.socket.emit('request-update-restrict', this.buildRequestParams(this.current.restrict));
+    },
+    removeRestrictDeck(item, index) {
+      this.current.restrict.deck.type.splice(index, 1);
+
+      this.updatePreset();
+
+      this.socket.emit('request-update-restrict', this.buildRequestParams(this.current.restrict));
+    },
+    updateRestrictDeck(side) {
+      let deck = new DeckDecoder(this.current.restrict.deck[side]);
+
+      if(deck.nation == 'NONE') {
+        this.current.restrict.deck[side] = '';
+      }
+
+      if(this.current.restrict.deck.type.indexOf(deck.spec) >= 0) {
+        this.current.restrict.deck[side] = '';
+      }
 
       this.updatePreset();
 
@@ -735,38 +783,32 @@ new Vue({
     },
     updateRestrictNation(side, val) {
       this.current.restrict.nation[side].type = val;
+      this.current.restrict.nation[side].deck = '';
 
       this.updatePreset();
 
       this.socket.emit('request-update-restrict', this.buildRequestParams(this.current.restrict));
     },
-    updateRestrict(key, deck) {
-      let str = null;
+    updateRestrictNationDeck(side) {
+      let deck = new DeckDecoder(this.current.restrict.nation[side].deck);
+
+      if(deck.nation == 'NONE') {
+        this.current.restrict.nation[side].deck = '';
+      }
+
+      if(this.current.restrict.nation[side].type != deck.nation) {
+        this.current.restrict.nation[side].deck = '';
+      }
+
+      this.updatePreset();
+
+      this.socket.emit('request-update-restrict', this.buildRequestParams(this.current.restrict));
+    },
+    updateRestrictLevel(key) {
+      if(!this.current.restrict.level[key]) {
+        this.current.restrict.level[key] = 0;
+      }
       
-      if(deck == 1) {
-        str = this.current.restrict[key];
-      } else if(deck == 2) {
-        str = this.current.restrict.nation[key].deck;
-      }
-
-      if(deck == 1 && str.trim().length > 0) {
-        if((new DeckDecoder(str)).nation == 'NONE') {
-          this.current.restrict[key] = '';
-        }
-      } else if(deck == 2 && str.trim().length > 0) {
-        if((new DeckDecoder(str)).nation != this.current.restrict.nation[key].type) {
-          this.current.restrict.nation[key].deck = '';
-        }
-      } else {
-        if(!this.current.restrict.min) {
-          this.current.restrict.min = 0;
-        }
-        
-        if(!this.current.restrict.max) {
-          this.current.restrict.max = 0;
-        }
-      }
-
       this.updatePreset();
 
       this.socket.emit('request-update-restrict', this.buildRequestParams(this.current.restrict));
@@ -877,7 +919,6 @@ new Vue({
       this.info.showDeckRestrict = false;
       this.info.showLevelRestrict = false;
       this.info.showNationRestrict = false;
-      this.info.showRestrict = false;
       this.info.show = 1;
       
       this.stopCountdown();

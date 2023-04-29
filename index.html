@@ -80,27 +80,27 @@
                     </div>
                     <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="" placeholder="Enter a preset name here" v-model="info.name" v-if="info.create">
                     <span class="input-group-btn" v-if="!info.create">
-                      <button class="btn wrd-button-1" v-on:click="toggle('create', true)">ADD</button>
+                      <button class="btn wrd-button" v-on:click="toggle('create', true)">ADD</button>
                     </span>
                     <span class="input-group-btn" v-if="!info.create">
-                      <button class="btn wrd-button-1" v-on:click="deletePreset()">DEL</button>
+                      <button class="btn wrd-button" v-on:click="deletePreset()">DEL</button>
                     </span>
                     <span class="input-group-btn" v-if="info.create">
-                      <button class="btn wrd-button-1" v-on:click="createPreset()">SAVE</button>
+                      <button class="btn wrd-button" v-on:click="createPreset()">SAVE</button>
                     </span>
                     <span class="input-group-btn" v-if="info.create">
-                      <button class="btn wrd-button-1" v-on:click="toggle('create', false)">BACK</button>
+                      <button class="btn wrd-button" v-on:click="toggle('create', false)">BACK</button>
                     </span>
                   </div>
                 </div>
               </div>
             </div>
             <div class="col text-end" style="margin-right:-11px;margin-left:11px;">
-              <button type="button" class="btn wrd-button-1" v-on:click="connect" v-if="!info.connected" data-bs-toggle="tooltip" data-bs-placement="top" title="Connect to the current server">Connect</button>
-              <button type="button" class="btn wrd-button-1" v-on:click="disconnect" v-if="info.connected" data-bs-toggle="tooltip" data-bs-placement="top" title="Disconnect from the current server">Disconnect</button>
-              <button type="button" class="btn wrd-button-1" v-on:click="push" v-if="info.connected" data-bs-toggle="tooltip" data-bs-placement="top" title="Push all settings to the current server">Push</button>
-              <button type="button" class="btn wrd-button-1" v-on:click="showImportDialog" data-bs-toggle="tooltip" data-bs-placement="top" title="Import preset information">Import</button>
-              <button type="button" class="btn wrd-button-1" v-on:click="copy" data-bs-toggle="tooltip" data-bs-placement="top" title="Export presets information to clipboard">Export</button>
+              <button type="button" class="btn wrd-button" v-on:click="connect" v-if="!info.connected" data-bs-toggle="tooltip" data-bs-placement="top" title="Connect to the current server">Connect</button>
+              <button type="button" class="btn wrd-button" v-on:click="disconnect" v-if="info.connected" data-bs-toggle="tooltip" data-bs-placement="top" title="Disconnect from the current server">Disconnect</button>
+              <button type="button" class="btn wrd-button" v-on:click="push" v-if="info.connected" data-bs-toggle="tooltip" data-bs-placement="top" title="Push all settings to the current server">Push</button>
+              <button type="button" class="btn wrd-button" v-on:click="showImportDialog" data-bs-toggle="tooltip" data-bs-placement="top" title="Import preset information">Import</button>
+              <button type="button" class="btn wrd-button" v-on:click="copy" data-bs-toggle="tooltip" data-bs-placement="top" title="Export presets information to clipboard">Export</button>
             </div>
           </div>
 
@@ -197,8 +197,8 @@
             </div>
             <div class="col text-center" style="margin-right:-11px;margin-left:11px;display:flex">
               <label class="wrd-text me-2" style="flex:auto;">{{info.state}}<span v-if="info.mode == 1 && info.time.length > 0"> - {{info.time}}</span></label>
-              <button type="button" class="btn ms-1 wrd-button-1" v-on:click="launch" v-if="info.connected && (info.mode == 2 || info.state == 'Unknown' || info.state == 'Waiting for players')">Launch</button>
-              <button type="button" class="btn ms-1 wrd-button-1" v-on:click="cancelLaunch" v-if="info.connected && (info.mode == 2 || info.state == 'Countdown')">Cancel Launch</button>
+              <button type="button" class="btn ms-1 wrd-button" v-on:click="launch" v-if="info.connected && (info.mode == 2 || info.state == 'Unknown' || info.state == 'Waiting for players')">Launch</button>
+              <button type="button" class="btn ms-1 wrd-button" v-on:click="cancelLaunch" v-if="info.connected && (info.mode == 2 || info.state == 'Countdown')">Cancel Launch</button>
             </div>
           </div>
 
@@ -224,7 +224,7 @@
                   </ul>
                 </div>
                 <span class="input-group-btn" v-if="info.mode == 1">
-                  <button class="btn wrd-button-1" v-on:click="addToRotationList()">+</button>
+                  <button class="btn wrd-button" v-on:click="addToRotationList()">+</button>
                 </span>
               </div>
             </div>
@@ -283,11 +283,11 @@
                 <div class="col-sm-8 p-0">
                   <div class="input-group">
                     <span class="input-group-btn">
-                      <button class="btn wrd-button-1" v-on:click="updateNumber('InitMoney', -1000)">-</button>
+                      <button class="btn wrd-button" v-on:click="updateNumber('InitMoney', -1000)">-</button>
                     </span>
                     <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="10000" v-model="current.settings.InitMoney">
                     <span class="input-group-btn">
-                      <button class="btn wrd-button-1" v-on:click="updateNumber('InitMoney', 1000)">+</button>
+                      <button class="btn wrd-button" v-on:click="updateNumber('InitMoney', 1000)">+</button>
                     </span>
                   </div>
                 </div>
@@ -300,11 +300,11 @@
                 <div class="col-sm-8 p-0">
                   <div class="input-group">
                     <span class="input-group-btn">
-                      <button class="btn wrd-button-1" v-on:click="updateNumber('ScoreLimit', -1000)">-</button>
+                      <button class="btn wrd-button" v-on:click="updateNumber('ScoreLimit', -1000)">-</button>
                     </span>
                     <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="20000" v-model="current.settings.ScoreLimit">
                     <span class="input-group-btn">
-                      <button class="btn wrd-button-1" v-on:click="updateNumber('ScoreLimit', 1000)">+</button>
+                      <button class="btn wrd-button" v-on:click="updateNumber('ScoreLimit', 1000)">+</button>
                     </span>
                   </div>
                 </div>
@@ -321,11 +321,11 @@
                 <div class="col-sm-8 p-0">
                   <div class="input-group">
                     <span class="input-group-btn">
-                      <button class="btn wrd-button-1" v-on:click="updateNumber('TimeLimit', -5)">-</button>
+                      <button class="btn wrd-button" v-on:click="updateNumber('TimeLimit', -5)">-</button>
                     </span>
                     <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="45" v-model="current.settings.TimeLimit">
                     <span class="input-group-btn">
-                      <button class="btn wrd-button-1" v-on:click="updateNumber('TimeLimit', 5)">+</button>
+                      <button class="btn wrd-button" v-on:click="updateNumber('TimeLimit', 5)">+</button>
                     </span>
                   </div>
                 </div>
@@ -364,9 +364,9 @@
             </div>
 
             <div class="col text-end" style="margin-right: -11px; margin-left: 11px;">
-              <button type="button" class="btn wrd-button-1" v-on:click="toggle('showLevelRestrict', true)" v-if="info.mode == 1">Level Restrict</button>
-              <button type="button" class="btn wrd-button-1" v-on:click="toggle('showDeckRestrict', true)" v-if="info.mode == 1">Deck Restrict</button>
-              <button type="button" class="btn wrd-button-1" v-on:click="toggle('showNationRestrict', true)" v-if="info.mode == 1">Nation Restrict</button>
+              <button type="button" class="btn wrd-button" v-on:click="toggle('showLevelRestrict', true)" v-if="info.mode == 1">Level Restrict</button>
+              <button type="button" class="btn wrd-button" v-on:click="toggle('showDeckRestrict', true)" v-if="info.mode == 1">Deck Restrict</button>
+              <button type="button" class="btn wrd-button" v-on:click="toggle('showNationRestrict', true)" v-if="info.mode == 1">Nation Restrict</button>
             </div>
 
           </div>
@@ -423,26 +423,30 @@
             <div class="col">
               <div class="row">
                 <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Restrict deck</label>
-                <div class="col-sm-8 p-0">
+                <div class="col-sm-8 p-0" style="display:flex;">
                   <div class="btn-group w-100">
                     <button class="btn btn-secondary btn-sm dropdown-toggle" style="border-radius: 0;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
-                      <img :src="'/assets/img/thematic_'+ current.restrict.deck + '.png'" class="img-fluid wrd-icon-2 ms-1 me-1">{{mapping.thematic[current.restrict.deck]}}
+                      <img :src="'/assets/img/thematic_'+ info.currentDeck + '.png'" class="img-fluid wrd-icon-2 ms-1 me-1">{{mapping.thematic[info.currentDeck]}}
                     </button>
                     <ul class="dropdown-menu w-100 p-0">
-                      <li v-for="(item, index) in mapping.restrict" v-bind:value="index" v-on:click="updateRestrictDeck(item)">
+                      <li v-for="(item, index) in mapping.restrict" v-bind:value="index" v-on:click="chooseDeckType(item)">
                         <div class="dropdown-item d-flex border border-dark border-top-0 pe-2">
                           <img :src="'/assets/img/thematic_' + item + '.png'" class="img-fluid wrd-icon-2 ms-1">
                           <div class="me-auto ms-2 wrd-map-name">{{mapping.thematic[item]}}</div>
                         </div>
                       </li>
                     </ul>
+                    <span class="input-group-btn"><button class="btn wrd-button" v-on:click="addRestrictDeck()">+</button></span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="col text-end" style="margin-right: -11px; margin-left: 11px;">
-              <button type="button" class="btn wrd-button-1" v-on:click="toggle('showDeckRestrict', false)">Back</button>
+            <div class="col text-end" style="margin-right: -11px; margin-left: 11px;display: flex;justify-content: flex-end;">
+              <span class="wrd-icon-4" v-for="(item, index) in current.restrict.deck.type" v-bind:value="index" v-on:click="removeRestrictDeck(item, index)">
+                <img :src="'/assets/img/thematic_' + item + '.png'" class="img-fluid">
+              </span>
+              <button type="button" class="btn wrd-button ms-2" v-on:click="toggle('showDeckRestrict', false)">Back</button>
             </div>
 
           </div>
@@ -453,7 +457,7 @@
               <div class="row">
                 <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Blue</label>
                 <div class="col-sm-8 p-0">
-                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.blue" @blur="updateRestrict('blue', 1)">
+                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.deck.blue" @blur="updateRestrictDeck('blue')">
                 </div>
               </div>
             </div>
@@ -462,7 +466,7 @@
               <div class="row">
                 <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Red</label>
                 <div class="col-sm-8 p-0">
-                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.red" @blur="updateRestrict('red', 1)">
+                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.deck.red" @blur="updateRestrictDeck('red')">
                 </div>
               </div>
             </div>
@@ -512,7 +516,7 @@
             </div>
 
             <div class="col text-end" style="margin-right: -11px; margin-left: 11px;">
-              <button type="button" class="btn wrd-button-1" v-on:click="toggle('showNationRestrict', false)">Back</button>
+              <button type="button" class="btn wrd-button" v-on:click="toggle('showNationRestrict', false)">Back</button>
             </div>
 
           </div>
@@ -523,7 +527,7 @@
               <div class="row">
                 <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Blue</label>
                 <div class="col-sm-8 p-0">
-                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.nation.blue.deck" @blur="updateRestrict('blue', 2)">
+                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.nation.blue.deck" @blur="updateRestrictNationDeck('blue')">
                 </div>
               </div>
             </div>
@@ -532,7 +536,7 @@
               <div class="row">
                 <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Red</label>
                 <div class="col-sm-8 p-0">
-                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.nation.red.deck" @blur="updateRestrict('red', 2)">
+                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.nation.red.deck" @blur="updateRestrictNationDeck('red')">
                 </div>
               </div>
             </div>
@@ -546,7 +550,7 @@
             </div>
 
             <div class="col text-end" style="margin-right: -11px; margin-left: 11px;">
-              <button type="button" class="btn wrd-button-1" v-on:click="toggle('showLevelRestrict', false)">Back</button>
+              <button type="button" class="btn wrd-button" v-on:click="toggle('showLevelRestrict', false)">Back</button>
             </div>
 
           </div>
@@ -557,7 +561,7 @@
               <div class="row">
                 <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Min Level</label>
                 <div class="col-sm-8 p-0">
-                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the min level, 0 is no restrict" v-model="current.restrict.min" @blur="updateRestrict('blue', 2)">
+                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the min level, 0 is no restrict" v-model="current.restrict.level.min" @blur="updateRestrictLevel('min')">
                 </div>
               </div>
             </div>
@@ -566,7 +570,7 @@
               <div class="row">
                 <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Max Level</label>
                 <div class="col-sm-8 p-0">
-                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the max level, 0 is no restrict" v-model="current.restrict.max" @blur="updateRestrict('red', 2)">
+                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the max level, 0 is no restrict" v-model="current.restrict.level.max" @blur="updateRestrictLevel('max')">
                 </div>
               </div>
             </div>
@@ -585,11 +589,11 @@
                 <div class="col-sm-8 p-0">
                   <div class="input-group">
                     <span class="input-group-btn">
-                      <button class="btn wrd-button-1" v-on:click="updateNumber('NbMinPlayer', -1, 2, current.settings.MaxTeamSize * 2)">-</button>
+                      <button class="btn wrd-button" v-on:click="updateNumber('NbMinPlayer', -1, 2, current.settings.MaxTeamSize * 2)">-</button>
                     </span>
                     <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="20" v-model="current.settings.NbMinPlayer">
                     <span class="input-group-btn">
-                      <button class="btn wrd-button-1" v-on:click="updateNumber('NbMinPlayer', 1, 2, current.settings.MaxTeamSize * 2)">+</button>
+                      <button class="btn wrd-button" v-on:click="updateNumber('NbMinPlayer', 1, 2, current.settings.MaxTeamSize * 2)">+</button>
                     </span>
                   </div>
                 </div>
@@ -597,7 +601,7 @@
             </div>
 
             <div class="col text-end" style="margin-right: -11px; margin-left: 11px;">
-              <button type="button" class="btn wrd-button-1" v-on:click="toggle('showMotd', true)" v-if="info.mode==1">Prompt Message</button>
+              <button type="button" class="btn wrd-button" v-on:click="toggle('showMotd', true)" v-if="info.mode==1">Prompt Message</button>
             </div>
 
           </div>
@@ -610,11 +614,11 @@
                 <div class="col-sm-8 p-0">
                   <div class="input-group">
                     <span class="input-group-btn">
-                      <button class="btn wrd-button-1" v-on:click="updateNumber('DeploiementTimeMax', -5, 30)">-</button>
+                      <button class="btn wrd-button" v-on:click="updateNumber('DeploiementTimeMax', -5, 30)">-</button>
                     </span>
                     <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="180" v-model="current.settings.DeploiementTimeMax">
                     <span class="input-group-btn">
-                      <button class="btn wrd-button-1" v-on:click="updateNumber('DeploiementTimeMax', 5, 30, 300)">+</button>
+                      <button class="btn wrd-button" v-on:click="updateNumber('DeploiementTimeMax', 5, 30, 300)">+</button>
                     </span>
                   </div>
                 </div>
@@ -627,11 +631,11 @@
                 <div class="col-sm-8 p-0">
                   <div class="input-group">
                     <span class="input-group-btn">
-                      <button class="btn wrd-button-1" v-on:click="updateNumber('LoadingTimeMax', -5, 30)">-</button>
+                      <button class="btn wrd-button" v-on:click="updateNumber('LoadingTimeMax', -5, 30)">-</button>
                     </span>
                     <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="60" v-model="current.settings.LoadingTimeMax">
                     <span class="input-group-btn">
-                      <button class="btn wrd-button-1" v-on:click="updateNumber('LoadingTimeMax', 5, 30, 180)">+</button>
+                      <button class="btn wrd-button" v-on:click="updateNumber('LoadingTimeMax', 5, 30, 180)">+</button>
                     </span>
                   </div>
                 </div>
@@ -648,11 +652,11 @@
                 <div class="col-sm-8 p-0">
                   <div class="input-group">
                     <span class="input-group-btn">
-                      <button class="btn wrd-button-1" v-on:click="updateNumber('DebriefingTimeMax', -5, 30, 180)">-</button>
+                      <button class="btn wrd-button" v-on:click="updateNumber('DebriefingTimeMax', -5, 30, 180)">-</button>
                     </span>
                     <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="90" v-model="current.settings.DebriefingTimeMax">
                     <span class="input-group-btn">
-                      <button class="btn wrd-button-1" v-on:click="updateNumber('DebriefingTimeMax', 5, 30, 180)">+</button>
+                      <button class="btn wrd-button" v-on:click="updateNumber('DebriefingTimeMax', 5, 30, 180)">+</button>
                     </span>
                   </div>
                 </div>
@@ -665,11 +669,11 @@
                 <div class="col-sm-8 p-0">
                   <div class="input-group">
                     <span class="input-group-btn">
-                      <button class="btn wrd-button-1" v-on:click="updateNumber('WarmupCountdown', -5, 10, 30)">-</button>
+                      <button class="btn wrd-button" v-on:click="updateNumber('WarmupCountdown', -5, 10, 30)">-</button>
                     </span>
                     <input type="text" class="form-control form-control-sm wrd-form border-0 text-center" value="60" v-model="current.settings.WarmupCountdown">
                     <span class="input-group-btn">
-                      <button class="btn wrd-button-1" v-on:click="updateNumber('WarmupCountdown', 5, 10, 30)">+</button>
+                      <button class="btn wrd-button" v-on:click="updateNumber('WarmupCountdown', 5, 10, 30)">+</button>
                     </span>
                   </div>
                 </div>
@@ -684,7 +688,7 @@
             </div>
 
             <div class="col text-end" style="margin-right: -11px; margin-left: 11px;">
-              <button type="button" class="btn wrd-button-1" v-on:click="saveMOTD" v-if="info.mode==1">Save</button>
+              <button type="button" class="btn wrd-button" v-on:click="saveMOTD" v-if="info.mode==1">Save</button>
             </div>
 
           </div>
@@ -740,7 +744,7 @@
                     <img src="/assets/img/water_1.png" class="img-fluid wrd-map-icon ms-1" v-if="mapping.maps[item].water==1">
                     <img src="/assets/img/water_2.png" class="img-fluid wrd-map-icon ms-1" v-if="mapping.maps[item].water==2">
                     <div class="me-auto ms-2 wrd-map-name" style="flex: auto;" v-on:click="changeMap(item)">{{mapping.maps[item].name}}</div>
-                    <div class="wrd-button-3 wrd-rotation-delete" style="padding: 0 18px;" v-on:click="removeFromRotationList(item)">DEL</div>
+                    <div class="wrd-button-s wrd-rotation-delete" style="padding: 0 18px;" v-on:click="removeFromRotationList(item)">DEL</div>
                   </div>
                 </div>
               </div>
@@ -777,9 +781,9 @@
                   <div class="wrd-text ms-2" style="width:50px;text-align: left;" v-if="item.level">Lv: {{item.level}}</div>
                   <div class="wrd-team" v-on:click="alliance(item,0)"><i class="wrd-team-blue me-1 ms-1"></i></div>
                   <div class="wrd-team" v-on:click="alliance(item,1)"><i class="wrd-team-red me-1"></i></div>
-                  <div class="wrd-button-3 px-2 border border-dark " v-on:click="deck(item)">Deck</div>
-                  <div class="wrd-button-3 px-2 border border-dark " v-on:click="kick(item)">Kick</div>
-                  <div class="wrd-button-3 px-2 border border-dark " v-on:click="ban(item)">Ban</div>
+                  <div class="wrd-button-s px-2 border border-dark " v-on:click="deck(item)">Deck</div>
+                  <div class="wrd-button-s px-2 border border-dark " v-on:click="kick(item)">Kick</div>
+                  <div class="wrd-button-s px-2 border border-dark " v-on:click="ban(item)">Ban</div>
                 </div>
               </div>
               
@@ -789,8 +793,8 @@
                   <textarea class="wrd-deck wrd-modal-body" v-model="info.current.deck"></textarea>
                   <div class="wrd-modal-button-group mb-1 me-2" style="background: #487157;position: relative;">
                     <label style="text-align: left;position: absolute;top: 0;left: 0;" class="ms-2 wrd-text">Deck Name: {{info.current.deckName}}</label>
-                    <button type="button" class="btn wrd-button-1" v-on:click="confirm">Confirm</button>
-                    <button type="button" class="btn wrd-button-1" v-on:click="cancel">Cancel</button>
+                    <button type="button" class="btn wrd-button" v-on:click="confirm">Confirm</button>
+                    <button type="button" class="btn wrd-button" v-on:click="cancel">Cancel</button>
                   </div>
                 </div>
               </div>
@@ -820,8 +824,8 @@
                     <input type="text" class="form-control form-control-sm wrd-form border-0 wrd-reason mt-2" placeholder="You can type the reason (Optional)" v-model="info.current.reason">
                   </div>
                   <div class="wrd-modal-button-group mb-1 me-2" style="background: #487157;position: relative;">
-                    <button type="button" class="btn wrd-button-1" v-on:click="confirmBan">Confirm</button>
-                    <button type="button" class="btn wrd-button-1" v-on:click="cancelBan">Cancel</button>
+                    <button type="button" class="btn wrd-button" v-on:click="confirmBan">Confirm</button>
+                    <button type="button" class="btn wrd-button" v-on:click="cancelBan">Cancel</button>
                   </div>
                 </div>
               </div>
@@ -836,7 +840,7 @@
                   <div class="wrd-text ms-2 me-auto" :title="fetchBanReason(item)">{{item.name}}</div>
                   <div class="wrd-text ms-1">{{ item.time | formatter }}</div>
                   <div class="wrd-text ms-2" style="width:100px;text-align: left;">ID: {{item.id}}</div>
-                  <div class="wrd-button-3 px-2 ms-2" v-on:click="unban(item)">Unban</div>
+                  <div class="wrd-button-s px-2 ms-2" v-on:click="unban(item)">Unban</div>
                 </div>
               </div>
             </div>
@@ -844,10 +848,10 @@
           <div class="row mt-2 mb-1">
             <div class="col text-center">
               <div class="btn-group" role="group">
-                <input type="radio" class="btn-check" name="btnradio" id="btnPlayerList1" autocomplete="off" value="1" v-model="info.show">
-                <label class="btn wrd-button-2" for="btnPlayerList1">Player list [{{info.playerList.length}}]</label>
-                <input type="radio" class="btn-check" name="btnradio" id="btnPlayerList2" autocomplete="off" value="2" v-model="info.show" v-if="info.mode == 1">
-                <label class="btn wrd-button-2" for="btnPlayerList2" v-if="info.mode == 1">Banned list [{{info.bannedList.length}}]</label>
+                <input type="radio" class="btn-check" name="btnradio1" id="btnPlayerList1" autocomplete="off" value="1" v-model="info.show">
+                <label class="btn wrd-button" for="btnPlayerList1">Player list [{{info.playerList.length}}]</label>
+                <input type="radio" class="btn-check" name="btnradio1" id="btnPlayerList2" autocomplete="off" value="2" v-model="info.show" v-if="info.mode == 1">
+                <label class="btn wrd-button" for="btnPlayerList2" v-if="info.mode == 1">Banned list [{{info.bannedList.length}}]</label>
               </div>
               <img src="/assets/img/refresh.png" class="wrd-refresh" v-on:click="refresh">
             </div>
@@ -859,23 +863,23 @@
           <div class="input-group">
             <input type="text" v-model="info.manualCommand" class="form-control form-control-sm wrd-form border-0 text-center" placeholder="You can type command here" v-on:keyup.enter="sendManualCommand">
             <span class="input-group-btn">
-              <button class="btn wrd-button-1" v-on:click="sendManualCommand">SEND</button>
+              <button class="btn wrd-button" v-on:click="sendManualCommand">SEND</button>
             </span>
           </div>
         </div>
       </div>
       <div class="row" v-if="info.mode == 1">
         <div class="col wrd-message-panel" v-bind:class="{'wrd-message-full': info.fullscreen}">
-          <div class="wrd-message-mask" v-if="info.fullscreen"></div>
+          <div class="wrd-message-mask"></div>
           <div class="wrd-message-btn-group">
             <div class="btn-group" role="group">
-              <input type="radio" class="btn-check" name="btnradio" id="btnLogs1" autocomplete="off" value="1" v-model="info.showLogs">
-              <label class="btn wrd-button-2" for="btnLogs1">Logs</label>
-              <input type="radio" class="btn-check" name="btnradio" id="btnLogs2" autocomplete="off" value="2" v-model="info.showLogs">
-              <label class="btn wrd-button-2" for="btnLogs2">Messages</label>
+              <input type="radio" class="btn-check" name="btnradio2" id="btnLogs1" autocomplete="off" value="1" v-model="info.showLogs">
+              <label class="btn wrd-button" for="btnLogs1">Logs</label>
+              <input type="radio" class="btn-check" name="btnradio2" id="btnLogs2" autocomplete="off" value="2" v-model="info.showLogs">
+              <label class="btn wrd-button" for="btnLogs2">Messages</label>
             </div>
-            <i class="wrd-button-1 wrd-fullscreen-icon" style="margin-left: 4px;" v-on:click="toggle('fullscreen', true)"></i>
-            <i class="wrd-button-1 wrd-fullscreen-exit-icon" style="margin-left: 4px;" v-if="info.fullscreen" v-on:click="toggle('fullscreen', false)"></i>
+            <i class="wrd-button wrd-fullscreen-icon" style="margin-left: 4px;" v-on:click="toggle('fullscreen', true)"></i>
+            <i class="wrd-button wrd-fullscreen-exit-icon" style="margin-left: 4px;" v-on:click="toggle('fullscreen', false)"></i>
           </div>
           <div class="wrd-border wrd-text-2 wrd-scroll wrd-select-allowed p-2 wrd-message" ref="message">
             <div v-for="(line, index) in info.logs" v-if="info.showLogs==1">
@@ -894,8 +898,8 @@
             <textarea style="resize:none;width:100%;height:100%;" v-model="info.presets"></textarea>
           </div>
           <div class="wrd-modal-button-group ms-2 mb-1 me-2 pt-1 pb-2 pe-2" style="width:60vw;background: #487157">
-            <button type="button" class="btn wrd-button-1" v-on:click="importPresets">Confirm</button>
-            <button type="button" class="btn wrd-button-1" v-on:click="cancelImport">Cancel</button>
+            <button type="button" class="btn wrd-button" v-on:click="importPresets">Confirm</button>
+            <button type="button" class="btn wrd-button" v-on:click="cancelImport">Cancel</button>
           </div>
         </div>
       </div>
