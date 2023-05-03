@@ -443,7 +443,7 @@ new Vue({
       let restrict = res.restrict;
 
       if(restrict.deck != null && restrict.deck.constructor != Object) {
-        restrict.deck = {type: [restrict.deck], blue: restrict.blue, red: restrict.red};
+        restrict.deck = {type: restrict.deck != -1 ? [restrict.deck] : [], blue: restrict.blue, red: restrict.red};
     
         delete restrict.blue;
         delete restrict.red;
