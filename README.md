@@ -20,6 +20,7 @@ Please note that if you restart the wargame service while rcon is running, rcon 
 - Player management
 - Level restrictions
 - Deck restrictions (For example, ban support deck)
+- Deck content preview
 - Auto rotate map
 - Game countdown
 - Server broadcast message [needs to be patched](https://github.com/wargame-mods/wargame-server/blob/master/patch.py)

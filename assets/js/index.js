@@ -131,7 +131,8 @@ new Vue({
         "2160": "3 Months",
         "4320": "6 Months",
         "0": "Permanent"
-      }
+      },
+      deckClass: ['LOG','INF','SUP','TNK','REC','VEH','HEL','AIR','NAV']
     },
     presets: {},
     current: {},
@@ -191,6 +192,7 @@ new Vue({
       current: {},
       name: '',
       showDeck: null,
+      deckPreview: false,
       showBan: null,
       showDeckRestrict: false,
       showLevelRestrict: false,
@@ -1040,6 +1042,13 @@ new Vue({
 
       this.info.current = {};
       this.info.showDeck = false;
+    },
+    preview: function() {
+      this.info.current.units = new DeckDecoder(this.info.current.deck).units;
+      this.info.deckPreview = true;
+    },
+    hidePreview: function() {
+      this.info.deckPreview = false;
     },
     copy: function() {
       const input = document.createElement('input');
