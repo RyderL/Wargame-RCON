@@ -793,7 +793,7 @@
                   <div class="wrd-modal-mask" style="background: #487157; opacity: 1;"></div>
                   <textarea class="wrd-deck wrd-modal-body" v-model="info.current.deck"></textarea>
                   <div class="wrd-modal-button-group mb-1 me-2" style="background: #487157;position: relative;">
-                    <label style="text-align: left;position: absolute;top: 0;left: 0;" class="ms-2 wrd-text">Deck Name: {{info.current.deckName}}</label>
+                    <label style="text-align: left;position: absolute;top: 0;left: 0;" class="ms-2 wrd-text">Deck: {{info.current.deckName}}</label>
                     <button type="button" class="btn wrd-button" v-on:click="preview">Preview</button>
                     <button type="button" class="btn wrd-button" v-on:click="confirm">Confirm</button>
                     <button type="button" class="btn wrd-button" v-on:click="cancel">Cancel</button>
@@ -914,7 +914,8 @@
               <hr>
             </div>
           </div>
-          <div class="wrd-modal-button-group ms-2 mb-1 me-2 pt-1 pb-2 pe-2" style="width:81vw;background: #487157">
+          <div class="wrd-modal-button-group ms-2 mb-1 me-2 pt-1 pb-2 pe-2" style="width:81vw;background: #487157;display:flex;">
+            <div style="flex: 1;text-align: center;"><label>Player: {{info.current.name}}</label><label style="margin-left:2vw;">Deck: {{info.current.deckName}}</label></div>
             <button type="button" class="btn wrd-button" v-on:click="hidePreview">Close</button>
           </div>
         </div>

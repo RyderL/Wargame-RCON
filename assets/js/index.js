@@ -1182,9 +1182,7 @@ new Vue({
       delete item.changeName;
       this.$forceUpdate();
 
-      this.socket.emit('request-change-player-name', this.buildRequestParams({uid: this.info.current.id, name: item.name}));
-
-      this.info.current = null;
+      this.socket.emit('request-change-player-name', this.buildRequestParams({uid: item.id, name: item.name}));
     }
   }
 });
