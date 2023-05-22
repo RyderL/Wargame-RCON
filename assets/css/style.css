@@ -608,6 +608,112 @@ label,
   display: block;
 }
 
+.deck-preview {
+  position: fixed;
+  top: 0; 
+  left: 0;
+  width:100%;
+  height:100%;
+  z-index: 1000;
+  color: #E3E3E3;
+}
+
+.deck-preview .wrd-modal-body {
+  width:81vw; 
+  flex: none;
+  padding:10px;
+  background:#487157
+}
+
+.deck-type {
+  width: 5vw; 
+  height: 3.8vw;
+  line-height: 3.8vw;
+  text-align: center;
+}
+
+.deck-row {
+  display: flex;;
+}
+
+.deck-preview hr {
+  width: 100%;
+  height: 1px;
+  margin: 5px 0;
+  background: #7da17b;
+}
+
+.deck-units {
+  display: flex;
+  font-size: 13px;
+}
+
+.deck-unit {
+  width: 7.8vw;
+  margin-left: 0.5vw;
+  padding: 5px 5px 0;
+  border: 1px solid #658d54;
+  display: flex;
+  flex-direction: column;
+}
+
+.deck-unit-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.deck-unit :last-child {
+  display: flex;
+}
+
+.wrd-modal-1 {
+  position: absolute;
+  top: 0; 
+  left: 0;
+  width:100%;
+  height:100%;
+  z-index: 1000;
+}
+
+.import-dialog {
+  position: fixed;
+  top: 0; 
+  left: 0;
+  width:100%;
+  height:100%;
+  z-index: 1000;
+}
+
+.deck-preview .wrd-modal-container, .import-dialog .wrd-modal-container {
+  justify-content: center;
+  align-items: center;
+}
+
+.import-dialog .wrd-modal-body {
+  width:60vw; 
+  height: 40vh; 
+  flex: none;
+  padding:10px;
+  background:#487157
+}
+
+.import-dialog textarea {
+  resize:none;
+  width:100%;
+  height:100%;
+}
+
+.import-dialog .wrd-modal-button-group {
+  width:60vw;
+  background: #487157
+}
+
+.deck-preview .wrd-modal-button-group {
+  width:81vw;
+  background: #487157
+}
 @keyframes refresh {
   from {
       transform: rotate(0deg);

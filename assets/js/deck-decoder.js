@@ -116,11 +116,15 @@ DeckDecoder.prototype.push = function(exp, unit, transport, craft) {
     cost += "+" + craft.cost;
   }
 
+  if(AVALIABILITY_UNITS_MAPPING[this.nation]) {
+    quantity = Math.round(AVALIABILITY_UNITS_MAPPING[this.nation][1] * quantity);
+  }
+
   this.units[type].push({exp, unit, transport, craft, quantity, cost});
 }
 
-let SPEC_EXP = [1, 2, 1, 1, 1, 1, 0];
-let SPEC_EFFECT = [[1, 4, 5], [3], [1], [1, 7], [1, 5], [1, 6, 7], []];
+let SPEC_EXP = [1, 2, 1, 1, 1, 1, 0, 0];
+let SPEC_EFFECT = [[1, 4, 5], [3], [1], [1, 7], [1, 5], [1, 6, 7], [], []];
 
 let NATION_MAPPING = {
   '000000001001': 'NATO',
@@ -182,6 +186,44 @@ let NATION_MAPPING = {
   '010100101011': 'YUGVAK',
   '010101001100': 'REDFOR',
   '010100101100': 'REDFOR'
+};
+
+let AVALIABILITY_UNITS_MAPPING = {
+  "ANZ": [15, 1.3],
+  "BLUEDRAGONS": [10, 1.2],
+  "CAN": [15, 1.4],
+  "CHI": [15, 1.3],
+  "CMW": [10, 1.1],
+  "CZ": [15, 1.3],
+  "DAN": [15, 1.4],
+  "EURO": [10, 1],
+  "FIN": [15, 1.2],
+  "FINPOL": [10, 1],
+  "FRA": [15, 1.2],
+  "HOL": [15, 1.2],
+  "ISR": [15, 1.1],
+  "JAP": [15, 1.3],
+  "LAND": [10, 1.15],
+  "NATO": [1, 1],
+  "NK": [15, 1.4],
+  "NLGR": [10, 1.1],
+  "NOR": [15, 1.4],
+  "NORAD": [10, 1],
+  "NSWP": [10, 1.1],
+  "POL": [15, 1.2],
+  "RDA": [15, 1.2],
+  "REDDRAGONS": [10, 1.2],
+  "REDFOR": [1, 1],
+  "RFA": [15, 1.2],
+  "ROK": [15, 1.3],
+  "SA": [15, 1.2],
+  "SCAND": [10, 1.15],
+  "SWE": [15, 1.3],
+  "UK": [15, 1.2],
+  "US": [15, 1.1],
+  "USSR": [15, 1.1],
+  "YUG": [15, 1.15],
+  "YUGVAK": [10, 1]
 };
 
 let UNITS_MAPPING = [{}, {}];

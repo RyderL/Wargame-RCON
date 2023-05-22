@@ -14,61 +14,6 @@
   <script src="/assets/js/deck-decoder.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://unpkg.com/vue-toasted@1.1.28/dist/vue-toasted.min.js"></script>
-  
-  <style>
-    .deck-preview {
-      position: fixed;
-      top: 0; 
-      left: 0;
-      width:100%;
-      height:100%;
-      z-index: 1000;
-      color: #E3E3E3;
-    }
-
-    .deck-type {
-      width: 5vw; 
-      height: 3.8vw;
-      line-height: 3.8vw;
-      text-align: center;
-    }
-
-    .deck-row {
-      display: flex;;
-    }
-
-    .deck-preview hr {
-      width: 100%;
-      height: 1px;
-      margin: 5px 0;
-      background: #7da17b;
-    }
-
-    .deck-units {
-      display: flex;
-      font-size: 13px;
-    }
-
-    .deck-unit {
-      width: 7.8vw;
-      margin-left: 0.5vw;
-      padding: 5px 5px 0;
-      border: 1px solid #658d54;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .deck-unit-name {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      flex: 1;
-    }
-
-    .deck-unit :last-child {
-      display: flex;
-    }
-  </style>
 </head>
 
 <body>
@@ -843,7 +788,7 @@
                 </div>
               </div>
               
-              <div class="ps-2" style="position: absolute;top: 0; left: 0;width:100%;height:100%" v-if="info.showDeck">
+              <div class="ps-2 wrd-modal-1" style="display: none" v-show="info.showDeck">
                 <div class="wrd-modal-container">
                   <div class="wrd-modal-mask" style="background: #487157; opacity: 1;"></div>
                   <textarea class="wrd-deck wrd-modal-body" v-model="info.current.deck"></textarea>
@@ -856,7 +801,7 @@
                 </div>
               </div>
               
-              <div class="ps-2" style="position: absolute;top: 0; left: 0;width:100%;height:100%" v-if="info.showBan">
+              <div class="ps-2 wrd-modal-1" style="display: none" v-show="info.showBan">
                 <div class="wrd-modal-container">
                   <div class="wrd-modal-mask" style="background: #487157; opacity: 1;"></div>
                   <div style="flex: auto;color: #fff;z-index: 9999;display: flex;justify-content: center;align-items: center;flex-flow: column;">
@@ -951,10 +896,10 @@
         </div>
       </div>
 
-      <div class="deck-preview" v-if="info.deckPreview">
-        <div class="wrd-modal-container" style="justify-content: center;align-items: center;">
+      <div class="deck-preview" v-show="info.deckPreview" style="display: none">
+        <div class="wrd-modal-container">
           <div class="wrd-modal-mask"></div>
-          <div class="wrd-modal-body" style="width:81vw; flex: none;padding:10px;background:#487157">
+          <div class="wrd-modal-body">
             <div v-for="(group, tid) in info.current.units" :key="tid">
               <div class="deck-row">
                 <div class="deck-type">{{mapping.deckClass[tid]}}</div>
@@ -975,13 +920,13 @@
         </div>
       </div>
 
-      <div style="position: fixed;top: 0; left: 0;width:100%;height:100%" v-if="info.import">
-        <div class="wrd-modal-container" style="justify-content: center;align-items: center;">
+      <div class="import-dialog" v-show="info.import" style="display: none">
+        <div class="wrd-modal-container">
           <div class="wrd-modal-mask"></div>
-          <div class="wrd-modal-body" style="width:60vw; height: 40vh; flex: none;padding:10px;background:#487157">
-            <textarea style="resize:none;width:100%;height:100%;" v-model="info.presets"></textarea>
+          <div class="wrd-modal-body">
+            <textarea v-model="info.presets"></textarea>
           </div>
-          <div class="wrd-modal-button-group ms-2 mb-1 me-2 pt-1 pb-2 pe-2" style="width:60vw;background: #487157">
+          <div class="wrd-modal-button-group ms-2 mb-1 me-2 pt-1 pb-2 pe-2">
             <button type="button" class="btn wrd-button" v-on:click="importPresets">Confirm</button>
             <button type="button" class="btn wrd-button" v-on:click="cancelImport">Cancel</button>
           </div>
