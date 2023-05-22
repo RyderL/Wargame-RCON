@@ -1179,7 +1179,11 @@ new Vue({
       });
     },
     confirmChangeName: function(item) {
-      delete item.changeName;
+      if(!item.changeName) {
+        return
+      }
+      
+      item.changeName = false;
       this.$forceUpdate();
 
       this.socket.emit('request-change-player-name', this.buildRequestParams({uid: item.id, name: item.name}));
