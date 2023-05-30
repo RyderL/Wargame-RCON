@@ -98,7 +98,8 @@ new Vue({
         "3": "Marine",
         "4": "Mecanized",
         "5": "Airborne",
-        "6": "Naval"
+        "6": "Naval",
+        "7": "General"
       },
       thematicSeq: [-1, -2, 0, 1, 2, 3, 4, 5, 6],
       date: {
@@ -132,7 +133,11 @@ new Vue({
         "4320": "6 Months",
         "0": "Permanent"
       },
-      deckClass: ['LOG','INF','SUP','TNK','REC','VEH','HEL','AIR','NAV']
+      deckClass: ['LOG','INF','SUP','TNK','REC','VEH','HEL','AIR','NAV'],
+      side: {
+        '0': 'BLUFOR',
+        '1': 'REDFOR'
+      }
     },
     presets: {},
     current: {},
@@ -1043,8 +1048,25 @@ new Vue({
       this.info.current = {};
       this.info.showDeck = false;
     },
-    preview: function() {
-      this.info.current.units = new DeckDecoder(this.info.current.deck).units;
+    preview: function(deck) {
+      if(deck) {
+        this.info.current.name = '-';
+        this.info.current.deckName = '-';
+      } else {
+        deck = this.info.current.deck;
+      }
+
+      let val = new DeckDecoder(deck);
+
+      if(!val.done) {
+        return;
+      }
+
+      this.info.current.units = val.units;
+      this.info.current.side = val.side;
+      this.info.current.nation = val.nation;
+      this.info.current.spec = val.spec;
+
       this.info.deckPreview = true;
     },
     hidePreview: function() {

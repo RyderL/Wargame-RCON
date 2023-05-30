@@ -458,7 +458,10 @@
               <div class="row">
                 <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Blue</label>
                 <div class="col-sm-8 p-0">
-                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.deck.blue" @blur="updateRestrictDeck('blue')">
+                  <div class="input-group">
+                    <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.deck.blue" @blur="updateRestrictDeck('blue')">
+                    <span class="input-group-btn"><button class="btn wrd-button" v-on:click="preview(current.restrict.deck.blue)">View</button></span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -467,7 +470,10 @@
               <div class="row">
                 <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Red</label>
                 <div class="col-sm-8 p-0">
-                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.deck.red" @blur="updateRestrictDeck('red')">
+                  <div class="input-group">
+                    <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.deck.red" @blur="updateRestrictDeck('red')">
+                    <span class="input-group-btn"><button class="btn wrd-button" v-on:click="preview(current.restrict.deck.red)">View</button></span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -528,7 +534,10 @@
               <div class="row">
                 <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Blue</label>
                 <div class="col-sm-8 p-0">
-                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.nation.blue.deck" @blur="updateRestrictNationDeck('blue')">
+                  <div class="input-group">
+                    <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.nation.blue.deck" @blur="updateRestrictNationDeck('blue')">
+                    <span class="input-group-btn"><button class="btn wrd-button" v-on:click="preview(current.restrict.nation.blue.deck)">View</button></span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -537,13 +546,15 @@
               <div class="row">
                 <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Red</label>
                 <div class="col-sm-8 p-0">
-                  <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.nation.red.deck" @blur="updateRestrictNationDeck('red')">
+                  <div class="input-group">
+                    <input type="text" class="form-control form-control-sm wrd-form border-0" placeholder="Please set the default deck" v-model="current.restrict.nation.red.deck" @blur="updateRestrictNationDeck('red')">
+                    <span class="input-group-btn"><button class="btn wrd-button" v-on:click="preview(current.restrict.nation.red.deck)">View</button></span>
+                  </div>
                 </div>
               </div>
             </div>
 
           </div>
-
 
           <div class="row mb-1" v-if="info.showLevelRestrict">
 
@@ -754,7 +765,7 @@
                   <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                     <div class="form-check form-switch">
                       <input class="form-check-input" type="checkbox" id="btnEnableAutoRotation" v-model="current.autoRotation">
-                      <label class="form-check-label wrd-map-name" style="font-size: 0.9em;" for="btnEnableAutoRotation">Enable random auto rotation</label>
+                      <label class="form-check-label wrd-map-name" style="font-size: 0.9em;" for="btnEnableAutoRotation">Auto rotation</label>
                     </div>
                   </div>
                 </div>
@@ -767,7 +778,7 @@
                 <div class="wrd-empty" v-if="!info.playerList.length">No data</div>
                 <div class="d-flex wrd-border-bottom" v-if="info.playerList.length" v-for="(item, index) in info.playerList" :key="item.id">
                   <div :class="'wrd-player-status wrd-text ms-1 wrd-player-status-' + item.status.toLowerCase() " :title="item.status" v-if="info.mode == 1">{{ item.status.substr(0, 1) }}</div>
-                  <img class="img-fluid wrd-map-icon ms-1" :src="'/assets/img/gametype_' + (item.alliance * 1 + 1) + '.png'" v-if="item.deckData">
+                  <img class="img-fluid wrd-map-icon ms-1" :src="'/assets/img/gametype_' + (item.alliance * 1 + 1) + '.png'" v-if="item.deckData" v-on:dblclick="alliance(item, ~item.alliance + 2)">
                   <div class="wrd-index ms-1">{{ index + 1 }}</div>
                   <img class="wrd-flag ms-2" :src="'https://flagpedia.net/data/flags/h24/' + item.country.toLowerCase() + '.png'" data-bs-toggle="tooltip" data-bs-placement="top" :title="fetchTooltip(item)" v-if="item.country">
                   <a :href="item.steam.profile" target="_blank" v-if="item.steam && item.steam.avatar">
@@ -794,7 +805,7 @@
                   <textarea class="wrd-deck wrd-modal-body" v-model="info.current.deck"></textarea>
                   <div class="wrd-modal-button-group mb-1 me-2" style="background: #487157;position: relative;">
                     <label style="text-align: left;position: absolute;top: 0;left: 0;" class="ms-2 wrd-text">Deck: {{info.current.deckName}}</label>
-                    <button type="button" class="btn wrd-button" v-on:click="preview">Preview</button>
+                    <button type="button" class="btn wrd-button" v-on:click="preview(info.current.deck)">Preview</button>
                     <button type="button" class="btn wrd-button" v-on:click="confirm">Confirm</button>
                     <button type="button" class="btn wrd-button" v-on:click="cancel">Cancel</button>
                   </div>
@@ -915,7 +926,13 @@
             </div>
           </div>
           <div class="wrd-modal-button-group ms-2 mb-1 me-2 pt-1 pb-2 pe-2" style="width:81vw;background: #487157;display:flex;">
-            <div style="flex: 1;text-align: center;"><label>Player: {{info.current.name}}</label><label style="margin-left:2vw;">Deck: {{info.current.deckName}}</label></div>
+            <div style="flex: 1;text-align: center;color:#C6C6C6">
+              <label>Side: {{mapping.side[info.current.side]}}</label>
+              <label style="margin-left:1vw;">Nation: {{info.current.nation}}</label>
+              <label style="margin-left:1vw;">Thematic: {{mapping.thematic[info.current.spec]}}</label>
+              <label style="margin-left:1vw;">Player: {{info.current.name}}</label>
+              <label style="margin-left:1vw;">Deck: {{info.current.deckName}}</label>
+            </div>
             <button type="button" class="btn wrd-button" v-on:click="hidePreview">Close</button>
           </div>
         </div>

@@ -7,6 +7,7 @@ function DeckDecoder(val) {
   this.deck = val;
   this.units = [[],[],[],[],[],[],[],[],[]];
   this.unitsCount = [];
+  this.done = false;
 
   try {
     this.decode();
@@ -47,7 +48,10 @@ DeckDecoder.prototype.decode = function() {
 
   if(!this.nation) {
     console.log(`unable to parse deck, code: ${this.code}, deck: ${this.deck}`);
+    return;
   }
+  
+  this.done = true;
 }
 
 DeckDecoder.prototype.decodeUnits = function(pos, idx, count) {
@@ -127,12 +131,12 @@ let SPEC_EXP = [1, 2, 1, 1, 1, 1, 0, 0];
 let SPEC_EFFECT = [[1, 4, 5], [3], [1], [1, 7], [1, 5], [1, 6, 7], [], []];
 
 let NATION_MAPPING = {
-  '000000001001': 'NATO',
-  '000111100000': 'NATO',
-  '000111100010': 'NATO',
-  '000111101001': 'NATO',
-  '000111101000': 'NATO',
-  '001000001100': 'NATO',
+  '000000001001': 'BLUFOR',
+  '000111100000': 'BLUFOR',
+  '000111100010': 'BLUFOR',
+  '000111101001': 'BLUFOR',
+  '000111101000': 'BLUFOR',
+  '001000001100': 'BLUFOR',
   '000000001010': 'US',
   '000000001100': 'US',
   '000010001100': 'CAN',
@@ -141,6 +145,7 @@ let NATION_MAPPING = {
   '000000101100': 'UK',
   '000001001010': 'FRA',
   '000001001100': 'FRA',
+  '000001001001': 'FRA',
   '000001101010': 'RFA',
   '000001101100': 'RFA',
   '000010101100': 'DAN',
@@ -161,6 +166,7 @@ let NATION_MAPPING = {
   '000111101100': 'SA',
   '001000000000': 'EURO',
   '001000000001': 'SCAND',
+  '001000100001': 'SCAND',
   '000111100001': 'SCAND',
   '001000000110': 'LAND',
   '000011101100': 'NOR',
@@ -176,6 +182,7 @@ let NATION_MAPPING = {
   '010010101100': 'NK',
   '010100100100': 'REDDRAGONS',
   '010100100101': 'NSWP',
+  '010101000101': 'UNSWP',
   '010011001100': 'FIN',
   '010100101010': 'FINPOL',
   '010001001001': 'POL',
@@ -183,6 +190,7 @@ let NATION_MAPPING = {
   '000111001100': 'YUG',
   '010011101100': 'YUG',
   '010001101100': 'CZ',
+  '010001101010': 'CZ',
   '010100101011': 'YUGVAK',
   '010101001100': 'REDFOR',
   '010100101100': 'REDFOR'
