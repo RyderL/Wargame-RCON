@@ -533,6 +533,11 @@ new Vue({
       }
       
       this.info.logs = this.info.logs.concat(res.item);
+
+      if(this.info.showLogs == 2) {
+        return;
+      }
+
       this.scrollToEnd();
     },
     onUpdateMessage: function(res) {
@@ -541,6 +546,11 @@ new Vue({
       }
 
       this.info.messages = this.info.messages.concat(res.item);
+      
+      if(this.info.showLogs == 1) {
+        return;
+      }
+      
       this.scrollToEnd();
     },
     onUpdateState: function(res) {

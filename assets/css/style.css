@@ -21,6 +21,17 @@ img {
   -webkit-user-drag: none;
 }
 
+.btn {
+  border: none;
+}
+
+.container-fluid {
+  display: flex;
+  flex-direction: column;
+  background-size: 100% !important;
+  height: 100vh;
+}
+
 .wrd-select-allowed {
   -moz-user-select:text;
   -webkit-user-select:text;
@@ -360,7 +371,7 @@ label,
   background-color: #29573A;
   color: white;
   font-family: 'Exo 2', sans-serif;
-  font-size: 0.8em;
+  font-size: 0.8rem;
   border-radius: 0px;
 }
 
@@ -499,14 +510,6 @@ label,
   max-width: 400px;
 }
 
-.wrd-author {
-  position: fixed;
-  bottom: 10px;
-  left: 10px;
-  color: #818181;
-  font-size: xx-small;
-}
-
 .wrd-refresh {
   filter: invert(100%);
   width: 24px;
@@ -533,6 +536,11 @@ label,
 
 .wrd-message-panel {
   position:relative;
+  flex: 1;
+  min-height: 0px;
+  margin-bottom: 0.5rem;
+  overflow-y: scroll;
+  z-index: 101;
 }
 
 .wrd-message-mask {
@@ -540,7 +548,6 @@ label,
   width: 100%;
   height: 100%;
   overflow: hidden;
-  display: none;
   position: fixed;
   top: 0px;
   left: 0px;
@@ -548,16 +555,10 @@ label,
   opacity: 0.85;
 }
 
-.wrd-message {
-  z-index: 101;
-  height:190px;
-  overflow-y:scroll;
-}
-
 .wrd-message-btn-group {
-  position: absolute; 
-  top: 6px; 
-  right: 26px; 
+  position: fixed; 
+  bottom: 1rem; 
+  right: 2rem; 
   text-align:center; 
   display: flex;
   z-index: 102;
@@ -580,19 +581,12 @@ label,
   display: none;
 }
 
-.wrd-message-full .wrd-message-btn-group {
-  position: fixed;
-  top: unset;
-  bottom: 8px;
-  right: 26px;
-}
-
-.wrd-message-full .wrd-message {
-  overflow-y: scroll;
-  height: 100vh;
-  width: 99.5vw;
+.wrd-message-full {
+  height: -webkit-fill-available;
+  width: -webkit-fill-available;
   top: 0px;
   left: 0px;
+  margin: 0.5rem 0 0.5rem 0.5rem;
   position: fixed;
 }
 

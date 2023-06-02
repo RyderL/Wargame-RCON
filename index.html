@@ -170,7 +170,7 @@
             </div>
           </div>
 
-          <div class="row mb-1" style="height: 33px;">
+          <div class="row mb-1">
             <div class="col">
               <div class="row">
                 <label class="col-sm-4 col-form-label col-form-label-sm wrd-label">Accessibility</label>
@@ -205,7 +205,7 @@
           <div class="row mb-1">
             <div class="col p-0">
               <div class="input-group">
-                <div class="btn-group" style="flex:1 1 auto;border-radius:0;height:33px;">
+                <div class="btn-group" style="flex:1 1 auto;border-radius:0">
                   <button class="btn btn-secondary btn-sm dropdown-toggle w-100" style="border-radius: 0;" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
                     <img :src="'/assets/img/mapmode_'+ mapping.maps[current.settings.Map].mode + '.jpg'" class="img-fluid wrd-map-icon ms-1">
                     <img src="/assets/img/water_1.png" class="img-fluid wrd-map-icon" v-if="mapping.maps[current.settings.Map].water==1">
@@ -883,26 +883,24 @@
         </div>
       </div>
 
-      <div class="row" v-if="info.mode == 1">
-        <div class="col wrd-message-panel" v-bind:class="{'wrd-message-full': info.fullscreen}">
-          <div class="wrd-message-mask"></div>
-          <div class="wrd-message-btn-group">
-            <div class="btn-group" role="group">
-              <input type="radio" class="btn-check" name="btnradio2" id="btnLogs1" autocomplete="off" value="1" v-model="info.showLogs">
-              <label class="btn wrd-button" for="btnLogs1">Logs</label>
-              <input type="radio" class="btn-check" name="btnradio2" id="btnLogs2" autocomplete="off" value="2" v-model="info.showLogs">
-              <label class="btn wrd-button" for="btnLogs2">Messages</label>
-            </div>
-            <i class="wrd-button wrd-fullscreen-icon" style="margin-left: 4px;" v-on:click="toggle('fullscreen', true)"></i>
-            <i class="wrd-button wrd-fullscreen-exit-icon" style="margin-left: 4px;" v-on:click="toggle('fullscreen', false)"></i>
+      <div class="wrd-message-mask" v-show="info.mode == 1 && info.fullscreen" style="display: none"></div>
+      <div class="wrd-message-panel wrd-border wrd-scroll" ref="message" v-bind:class="{'wrd-message-full': info.fullscreen}" v-if="info.mode == 1">
+        <div class="wrd-message-btn-group">
+          <div class="btn-group" role="group">
+            <input type="radio" class="btn-check" name="btnradio2" id="btnLogs1" autocomplete="off" value="1" v-model="info.showLogs">
+            <label class="btn wrd-button" for="btnLogs1">Logs</label>
+            <input type="radio" class="btn-check" name="btnradio2" id="btnLogs2" autocomplete="off" value="2" v-model="info.showLogs">
+            <label class="btn wrd-button" for="btnLogs2">Messages</label>
           </div>
-          <div class="wrd-border wrd-text-2 wrd-scroll wrd-select-allowed p-2 wrd-message" ref="message">
-            <div v-for="(line, index) in info.logs" v-if="info.showLogs==1">
-              {{line}}
-            </div>
-            <div v-for="(item, index) in info.messages" v-if="info.showLogs==2">
-              [{{moment(item.time).format("YYYY-MM-DD HH:mm:ss")}}] [{{item.id}}] {{item.name}}: {{item.message}}
-            </div>
+          <i class="wrd-button wrd-fullscreen-icon" style="margin-left: 4px;" v-on:click="toggle('fullscreen', true)"></i>
+          <i class="wrd-button wrd-fullscreen-exit-icon" style="margin-left: 4px;" v-on:click="toggle('fullscreen', false)"></i>
+        </div>
+        <div class="wrd-text-2 wrd-select-allowed p-2">
+          <div v-for="(line, index) in info.logs" v-if="info.showLogs==1">
+            {{line}}
+          </div>
+          <div v-for="(item, index) in info.messages" v-if="info.showLogs==2">
+            [{{moment(item.time).format("YYYY-MM-DD HH:mm:ss")}}] [{{item.id}}] {{item.name}}: {{item.message}}
           </div>
         </div>
       </div>
@@ -953,7 +951,6 @@
       
     </div>
   </div>
-  <div class="wrd-author">Made by Eric, Version: 2.1.2</div>
   <script type="text/javascript" src="/assets/js/countries.js?v=20230101"></script>
   <script type="text/javascript" src="/assets/js/index.js?v=20230101"></script>
 </body>
