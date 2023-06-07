@@ -1059,7 +1059,7 @@ new Vue({
       this.info.showDeck = false;
     },
     preview: function(deck) {
-      if(deck) {
+      if(!this.info.current.name) {
         this.info.current.name = '-';
         this.info.current.deckName = '-';
       } else {
