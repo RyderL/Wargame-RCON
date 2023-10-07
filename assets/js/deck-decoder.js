@@ -101,7 +101,7 @@ DeckDecoder.prototype.getInt = function(begin, end) {
 }
 
 DeckDecoder.prototype.push = function(exp, unit, transport, craft) {
-  let _exp = SPEC_EFFECT[this.spec].indexOf(unit.type) > -1 ? exp - SPEC_EXP[this.spec] : exp;
+  let _exp = SPEC_EFFECT[this.spec].indexOf(unit.type) > -1 ? exp + SPEC_EXP[this.spec] : exp;
   
   if(_exp > 4) {
     _exp = 4;
