@@ -1082,11 +1082,11 @@ new Vue({
     hidePreview: function() {
       this.info.deckPreview = false;
     },
-    copy: function() {
+    copy: function(content) {
       const input = document.createElement('input');
       document.body.appendChild(input);
       //input.setAttribute('value', btoa(encodeURIComponent(JSON.stringify(this.presets))));
-      input.setAttribute('value', JSON.stringify(this.presets));
+      input.setAttribute('value', content || JSON.stringify(this.presets));
       input.select();
 
       if (document.execCommand('copy')) {

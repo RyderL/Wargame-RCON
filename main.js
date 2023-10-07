@@ -908,9 +908,7 @@ const fetchRestrict = async function(host) {
     delete restrict.red;
   }
 
-  if(restrict.min || restrict.max) {
-    restrict.level = {min: restrict.min, max: restrict.max};
-
+  if(restrict.min != undefined || restrict.max != undefined) {
     delete restrict.min;
     delete restrict.max;
   }

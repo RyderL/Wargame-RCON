@@ -406,6 +406,10 @@ label,
   border-bottom:1px solid #212529;
 }
 
+.wrd-player-list > div:hover:not(.wrd-empty) {
+  background: #2f2f2f;
+}
+
 .wrd-player-list .wrd-border-bottom:last-child {
   border-bottom: none;
 }
@@ -649,6 +653,7 @@ label,
   border: 1px solid #658d54;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .deck-unit-name {
@@ -660,6 +665,25 @@ label,
 
 .deck-unit :last-child {
   display: flex;
+}
+
+.deck-unit-rank {
+  display: block;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.deck-unit-rank-arrow {
+  border: solid #FFCD71;
+  border-width: 0 2px 2px 0;
+  padding: 4px;
+  transform: rotate(-135deg);
+  display: block;
+}
+
+.deck-unit-rank-arrow:not(:first-child) {
+  margin-top: -6px;
 }
 
 .wrd-modal-1 {
@@ -708,6 +732,7 @@ label,
   width:81vw;
   background: #487157
 }
+
 @keyframes refresh {
   from {
       transform: rotate(0deg);

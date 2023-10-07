@@ -12,8 +12,8 @@
   <script src="/assets/js/vue.min.js"></script>
   <script src="/assets/js/moment.min.js"></script>
   <script src="/assets/js/deck-decoder.js"></script>
+  <script src="/assets/js/vue-toasted.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="https://unpkg.com/vue-toasted@1.1.28/dist/vue-toasted.min.js"></script>
 </head>
 
 <body>
@@ -780,7 +780,7 @@
                   <div :class="'wrd-player-status wrd-text ms-1 wrd-player-status-' + item.status.toLowerCase() " :title="item.status" v-if="info.mode == 1">{{ item.status.substr(0, 1) }}</div>
                   <img class="img-fluid wrd-map-icon ms-1" :src="'/assets/img/gametype_' + (item.alliance * 1 + 1) + '.png'" v-if="item.deckData" v-on:dblclick="alliance(item, ~item.alliance + 2)">
                   <div class="wrd-index ms-1">{{ index + 1 }}</div>
-                  <img class="wrd-flag ms-2" :src="'https://flagpedia.net/data/flags/h24/' + item.country.toLowerCase() + '.png'" data-bs-toggle="tooltip" data-bs-placement="top" :title="fetchTooltip(item)" v-if="item.country">
+                  <img class="wrd-flag ms-2" :src="'https://flagpedia.net/data/flags/h24/' + item.country.toLowerCase() + '.png'" data-bs-toggle="tooltip" data-bs-placement="top" :title="fetchTooltip(item)" v-on:dblclick="copy(item.ip)" v-if="item.country">
                   <a :href="item.steam.profile" target="_blank" v-if="item.steam && item.steam.avatar">
                     <img :src="item.steam.avatar" style="width:20px;height:20px;margin:2px 4px;">
                   </a>
@@ -914,6 +914,9 @@
                 <div class="deck-type">{{mapping.deckClass[tid]}}</div>
                 <div class="deck-units">
                   <div class="deck-unit" v-for="(item, index) in group" :key="index">
+                    <div class="deck-unit-rank">
+                      <i class="deck-unit-rank-arrow" v-for="index of (item.exp + 1)"></i>
+                    </div>
                     <div class="deck-unit-name">{{item.unit.name}}</div>
                     <div class="deck-unit-name" v-if="item.transport">{{item.transport.name}}</div>
                     <div><div style="flex: 1">{{item.quantity}}</div><div>{{item.cost}}</div></div>

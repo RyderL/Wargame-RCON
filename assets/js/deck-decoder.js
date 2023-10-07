@@ -103,6 +103,10 @@ DeckDecoder.prototype.getInt = function(begin, end) {
 DeckDecoder.prototype.push = function(exp, unit, transport, craft) {
   let _exp = SPEC_EFFECT[this.spec].indexOf(unit.type) > -1 ? exp - SPEC_EXP[this.spec] : exp;
   
+  if(_exp > 4) {
+    _exp = 4;
+  }
+
   let quantity = unit.available[_exp];
   let type = craft ? 8 : unit.type;
 
@@ -169,6 +173,7 @@ let NATION_MAPPING = {
   '001000100001': 'SCAND',
   '000111100001': 'SCAND',
   '001000000110': 'LAND',
+  '001000100110': 'LAND',
   '000011101100': 'NOR',
   '001000100011': 'BLUEDRAGONS',
   '001000000011': 'BLUEDRAGONS',
