@@ -109,9 +109,17 @@ DeckDecoder.prototype.push = function(exp, unit, transport, craft) {
 
   let quantity = unit.available[_exp];
   let type = craft ? 8 : unit.type;
+  
+  if(!quantity && _exp == 3) {
+    quantity = unit.available[4];
+  }
 
   if(transport && transport.available[_exp] < quantity) {
     quantity = transport.available[_exp];
+      
+    if(!quantity && _exp == 3) {
+      quantity = transport.available[4];
+    }
   }
   
   let cost = unit.cost;
