@@ -407,7 +407,7 @@ label,
 }
 
 .wrd-player-list > div:hover:not(.wrd-empty) {
-  background: #2f2f2f;
+  box-shadow: 0 0 2px white inset;
 }
 
 .wrd-player-list .wrd-border-bottom:last-child {
