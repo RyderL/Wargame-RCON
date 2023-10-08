@@ -407,6 +407,7 @@ label,
 }
 
 .wrd-player-list > div:hover:not(.wrd-empty) {
+  background: #3e987315;
   box-shadow: 0px 0px 4px 2px #20482f inset;
 }
 
@@ -499,6 +500,7 @@ label,
 
 .wrd-rotation-item:hover {
   background: #3e987315;
+  box-shadow: 0px 0px 4px 2px #20482f inset;
 }
 
 .wrd-rotation-item .wrd-rotation-delete {
