@@ -100,7 +100,7 @@
               <button type="button" class="btn wrd-button" v-on:click="disconnect" v-if="info.connected" data-bs-toggle="tooltip" data-bs-placement="top" title="Disconnect from the current server">Disconnect</button>
               <button type="button" class="btn wrd-button" v-on:click="push" v-if="info.connected" data-bs-toggle="tooltip" data-bs-placement="top" title="Push all settings to the current server">Push</button>
               <button type="button" class="btn wrd-button" v-on:click="showImportDialog" data-bs-toggle="tooltip" data-bs-placement="top" title="Import preset information">Import</button>
-              <button type="button" class="btn wrd-button" v-on:click="copy" data-bs-toggle="tooltip" data-bs-placement="top" title="Export presets information to clipboard">Export</button>
+              <button type="button" class="btn wrd-button" v-on:click="copy()" data-bs-toggle="tooltip" data-bs-placement="top" title="Export presets information to clipboard">Export</button>
             </div>
           </div>
 
