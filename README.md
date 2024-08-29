@@ -8,6 +8,8 @@ Please note that if you restart the wargame service while rcon is running, rcon 
 
 <i>recommended to use the 127.0.0.1 loopback address to connect to the server</i>
 
+***compatibility with italian DLC will be completed in September***
+
 #### Screenshot
 <div align="center">
     <img src="./screenshot.jpg">
