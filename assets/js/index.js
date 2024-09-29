@@ -116,7 +116,7 @@ new Vue({
       },
       nationSeq: [-1, 0, 1, 2],
       nationCode: {
-        blue: ["BLUFOR","US","UK","FRA","RFA","CAN","DAN","SWE","NOR","ANZ","JAP","ROK","HOL","ISR","SA","EURO","SCAND","CMW","BLUEDRAGONS","LAND","NORAD","NLGR"],
+        blue: ["BLUFOR","US","UK","FRA","RFA","CAN","DAN","SWE","NOR","ANZ","JAP","ROK","HOL","ISR","SA", "ITA","EURO","SCAND","CMW","BLUEDRAGONS","LAND","NORAD","NLGR"],
         red: ["REDFOR","RDA","USSR","POL","FIN","YUG","CZ","CHI","NK","NSWP","REDDRAGONS","FINPOL","YUGVAK"]
       },
       restrict: [-1, 0, 1, 2, 3, 4, 5],
@@ -228,8 +228,6 @@ new Vue({
     id: null,
     socket: null,
     prev: null,
-    voiceConfig: null,
-    voicePresets: null,
     sound: new Audio("data:audio/wav;base64,//tQxAAAB9yXNXQTAAHDKWo7HtAAIAJcAABgzGN5jY/H/neydsTJ3v//u7vf///4IEEDwAEZZO/EJ3rREeyBCAxu6P8HAQh+D4Pg+H9YP/Ln//w/URUvU0quBmjOADHXH0nQJSQt9iqIorGAvrJGS1YDxgPBRdYwLxNJApxlhfkgCGG4gluim81m3GHGspViAhPuJOIVJ1GRA9RG84QetGur/2rWerOspS0k6jFl0lJUiaaIJaLK1a7//V7fXfOGfxBb6nK+7f2tWgSKWQdsMP/7UsQFgAu1ZVu89oAReJlp/MaK3BAKsY6zCQ5dySoKeZvlKCnSsTR6gjBqiy1rWnY6SSmPs/+iYpk51f8iDuHaixxi+hoL1bbPts/b9dSZr/uj7X1ba+vqXTo0du1N97NVRXnzVjdb08xOTCDKQKpJbngUBq+RjgjqyShodC7Dhzj9H5vg8ABuf2w2p82simzX+gxJiTk0sXb/cZhTTpvQ+QZF5zmZX7QgvJAmKBULFVicFwSe9VtQ4sOwMW8tURqehN9Qmpc9dfAkEW5JT/Kw//tSxAWACzFjV6Y0U1l9rKn8yBZpVlZD1EeKTNVLLbJ0TzsR7snLCCRP1VmBKUP/1lZgALZeNmR/RjuZJ6kG+jF/t64ZjJoQ7HCCXVGuqJOUptr/3ITvb//O/mTrQIHZpf/AyLnJm4lhcAMc1LDyckAzdDgDQhnxFSNHo0jzpZRVNmnlsQWB+pu7VLrTC/ALCKbJt/zMtEIJQf/5kfTdxnEVXX9X+ldNFf1kU4O2dtb6uSjf9U+3btqulNnXyRcIjxIBrbqrq6IYwRbuxssBqCb/+1LEBwAMLWdX9MaAAXeaLXcW0AIRIx/IA7OCZR/VZUOjse7sXtZmLarWggkS4GoHwuN/+odiIiih/+aaAuNb0f/666SCDabJso8LdNNq0aqqZmtd3//60zjMyq169abnVqVQ7V1n3XcPh8LBEGRIIR4IxYHAsWOV9wMk2fHghjUq8hj3k7E9DhOGXy+JKbzFJ/rOA0E0sLzmVvn6QXkDyGR1Io/hegsCRHmPdNA0MTVLX/WpRgUi5qLfzM6QMKQ3/6fKpIsVAAAAHH/AH+v/6v/7UsQFA8OoAPm8AYAgAAA0gAAABPDS3dH///+n//DSj3EX+hZ3//oVTEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV")
   },
   created: function() {
@@ -256,7 +254,10 @@ new Vue({
     var id = localStorage.getItem("id");
 
     if(!id) {
-      id = Date.now();
+      id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = (Math.random() * 16) | 0, v = c == 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
       localStorage.setItem("id", id);
     }
 
@@ -291,35 +292,15 @@ new Vue({
     localStorage.setItem("presets_v2", JSON.stringify(presets));
     localStorage.setItem("name", name);
 
-    this.voicePresets = window.speechSynthesis.getVoices();
-    this.voiceConfig = new SpeechSynthesisUtterance();
-    this.voiceConfig.voice = this.voicePresets[1]; // 
-    this.voiceConfig.voiceURI = 'native';
-    this.voiceConfig.volume = 1; // 0 to 1
-    this.voiceConfig.rate = 1; // 0.1 to 10
-    this.voiceConfig.pitch = 2; //0 to 2
-    this.voiceConfig.text = '';
-    this.voiceConfig.lang = 'en';
-
     window.socket = this.socket = io();
-
-    this.socket.io.on('reconnect_attempt', function(e) {
-      console.log('socket reconnecting ...');
-    });
-
-    this.socket.io.on('reconnect_error', function(e) {
-      console.log(e);
-      console.log('socket reconnect error');
-    });
-
-    this.socket.io.on('reconnect_failed', function(e) {
-      console.log(e);
-      console.log('socket reconnect failed');
-    });
 
     this.socket.io.on('reconnect', this.connect);
 
     this.socket.on('connect', this.connect);
+
+    this.socket.on('connection', function(e){
+      console.log(e);
+    })
 
     this.style = "background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url('/assets/img/bg/" + Math.floor(Math.random()*51) + ".jpg');"
   },
@@ -627,10 +608,6 @@ new Vue({
       }
 
       return num + '';
-    },
-    speak: function(word) {
-      this.voiceConfig.text = word;
-      speechSynthesis.speak(this.voiceConfig);
     },
     beep: function() {
       this.sound.play();
@@ -1067,10 +1044,6 @@ new Vue({
       }
 
       let val = new DeckDecoder(deck);
-
-      if(!val.done) {
-        return;
-      }
 
       this.info.current.units = val.units;
       this.info.current.side = val.side;

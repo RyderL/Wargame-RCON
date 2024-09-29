@@ -27,6 +27,7 @@ const { join } = require('path');
 
 const db = levelup(leveldown('./db'))
 
+app.use('/favicon.ico', express.static('favicon.ico'));
 app.use('/assets', express.static('assets'));
 
 const HOST_CHECK_REGEXP = /^(\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5]):([0-9]|[1-9]\d|[1-9]\d{2}|[1-9]\d{3}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/;
